@@ -1,0 +1,4 @@
+Project: @project.name@
+Author: Mark Price
+Version: @version.major@.@version.minor@
+Build-Date: @version.timestamp@
