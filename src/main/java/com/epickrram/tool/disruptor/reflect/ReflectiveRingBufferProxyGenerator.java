@@ -1,17 +1,17 @@
 package com.epickrram.tool.disruptor.reflect;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.epickrram.tool.disruptor.Invoker;
 import com.epickrram.tool.disruptor.InvokerEventHandler;
 import com.epickrram.tool.disruptor.ProxyMethodInvocation;
 import com.epickrram.tool.disruptor.RingBufferProxyGenerator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
@@ -49,7 +49,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
             final long sequence = ringBuffer.next();
             try
             {
-                final ProxyMethodInvocation proxyMethodInvocation = ringBuffer.get(sequence);
+                final ProxyMethodInvocation proxyMethodInvocation = ringBuffer.getPreallocated(sequence);
                 if(args != null)
                 {
                     proxyMethodInvocation.ensureCapacity(args.length);
