@@ -103,7 +103,7 @@ public final class PerfTest
                                            final CounterImpl implementation)
     {
         return new RingBufferProxyGeneratorFactory().create(generatorType).
-                createRingBufferProxy(implementation, Counter.class, disruptor);
+                createRingBufferProxy(implementation, Counter.class, disruptor, OverflowStrategy.DROP);
     }
 
     private static final class CounterImpl implements Counter

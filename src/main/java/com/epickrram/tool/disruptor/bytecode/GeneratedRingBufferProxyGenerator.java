@@ -1,33 +1,19 @@
 package com.epickrram.tool.disruptor.bytecode;
 
+import com.epickrram.tool.disruptor.*;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
+import javassist.*;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.epickrram.tool.disruptor.Invoker;
-import com.epickrram.tool.disruptor.InvokerEventHandler;
-import com.epickrram.tool.disruptor.ProxyMethodInvocation;
-import com.epickrram.tool.disruptor.RingBufferProxyGenerator;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
-
-
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.CtField;
-import javassist.CtMethod;
-import javassist.CtNewConstructor;
-import javassist.LoaderClassPath;
-import javassist.Modifier;
-import javassist.NotFoundException;
-
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private final ClassPool classPool;
 
@@ -39,17 +25,18 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     @SuppressWarnings("unchecked")
     @Override
     public <T> T createRingBufferProxy(final T implementation, final Class<T> definition,
-                                       final Disruptor<ProxyMethodInvocation> disruptor)
+                                       final Disruptor<ProxyMethodInvocation> disruptor,
+                                       final OverflowStrategy overflowStrategy)
     {
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition);
 
-        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap);
+        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
     }
 
     private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
-                                final Map<Method, Invoker> methodToInvokerMap)
+                                final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy)
     {
         final StringBuilder proxyClassName = new StringBuilder("_proxy").append(definition.getSimpleName());
         final CtClass ctClass = classPool.makeClass(proxyClassName.toString());
@@ -62,7 +49,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         for(final Method method : definition.getDeclaredMethods())
         {
-            createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method));
+            createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy);
         }
 
         return instantiate(ctClass, ringBuffer);
@@ -136,7 +123,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
     }
 
-    private void createRingBufferPublisherMethod(final CtClass ctClass, final Method method, final Invoker invoker)
+    private void createRingBufferPublisherMethod(final CtClass ctClass, final Method method, final Invoker invoker,
+                                                 final OverflowStrategy overflowStrategy)
     {
         final StringBuilder methodSrc = new StringBuilder("public void ").append(method.getName()).append("(");
         final Class<?>[] parameterTypes = method.getParameterTypes();
@@ -160,6 +148,14 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             }
         }
         methodSrc.append(")\n{\n");
+
+        if(overflowStrategy == OverflowStrategy.DROP)
+        {
+            methodSrc.append("if(!ringBuffer.hasAvailableCapacity(1))\n");
+            methodSrc.append("{");
+            methodSrc.append("return;\n");
+            methodSrc.append("}\n");
+        }
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
                 append("{\n").
