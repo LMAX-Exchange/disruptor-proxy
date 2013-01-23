@@ -17,15 +17,17 @@
 
 package com.epickrram.tool.disruptor;
 
-import com.lmax.disruptor.BusySpinWaitStrategy;
-import com.lmax.disruptor.SingleThreadedClaimStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import org.junit.Test;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
+
+import com.lmax.disruptor.BusySpinWaitStrategy;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+
+import org.junit.Test;
+
 
 import static com.epickrram.tool.disruptor.GeneratorType.BYTECODE_GENERATION;
 import static com.epickrram.tool.disruptor.GeneratorType.JDK_REFLECTION;
@@ -49,8 +51,8 @@ public final class PerfTest
         final CounterImpl counter = new CounterImpl(EXPECTED_INVOCATION_COUNT);
         final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(RingBufferProxyEventFactory.FACTORY, executor,
-                new SingleThreadedClaimStrategy(BUFFER_SIZE), new BusySpinWaitStrategy());
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(RingBufferProxyEventFactory.FACTORY, BUFFER_SIZE, executor,
+                                                                                                ProducerType.SINGLE, new BusySpinWaitStrategy());
 
         final Counter proxy = getCounterProxy(generatorType, disruptor, counter);
         disruptor.start();

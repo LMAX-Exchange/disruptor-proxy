@@ -1,17 +1,29 @@
 package com.epickrram.tool.disruptor.bytecode;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.epickrram.tool.disruptor.Invoker;
 import com.epickrram.tool.disruptor.InvokerEventHandler;
 import com.epickrram.tool.disruptor.ProxyMethodInvocation;
 import com.epickrram.tool.disruptor.RingBufferProxyGenerator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-import javassist.*;
-import javassist.Modifier;
 
-import java.lang.reflect.*;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtField;
+import javassist.CtMethod;
+import javassist.CtNewConstructor;
+import javassist.LoaderClassPath;
+import javassist.Modifier;
+import javassist.NotFoundException;
 
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
@@ -151,7 +163,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
                 append("{\n").
-                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.get(sequence);\n").
+                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.getPreallocated(sequence);\n").
 
                 append("proxyMethodInvocation.ensureCapacity(").
                 append(parameterTypes.length).

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="disruptor-mods" basedir="." default="all">
+<project name="disruptor-proxy" basedir="." default="all">
 
     <property name="build.dir" value="build"/>
     <property name="dist.dir" value="${build.dir}/dist"/>
@@ -14,7 +14,7 @@
     <property name="manifest.output" value="${main.compile.output.dir}/MANIFEST.MF"/>
     <property name="test.report.dir" value="${build.dir}/test/report"/>
     <property name="release.dir" value="${build.dir}/release"/>
-    <property name="project.label" value="Disruptor Mods"/>
+    <property name="project.label" value="Disruptor Proxy"/>
     <property name="jar.name" value="${ant.project.name}"/>
     <property name="version.major" value="1"/>
     <property name="version.minor" value="2"/>
