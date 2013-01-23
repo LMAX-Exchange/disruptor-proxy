@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private final ClassPool classPool;
 
