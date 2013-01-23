@@ -15,7 +15,7 @@ final T tImpl = new ConcreteT();
 
 final RingBufferProxyGenerator generator = generatorFactory.create(GeneratorType.BYTECODE_GENERATION);
 
-final T proxy = generator.createRingBufferProxy(tImpl, T.class, disruptor);
+final T proxy = generator.createRingBufferProxy(tImpl, T.class, disruptor, OverflowStrategy.DROP);
 
 disruptor.start();
 ```
