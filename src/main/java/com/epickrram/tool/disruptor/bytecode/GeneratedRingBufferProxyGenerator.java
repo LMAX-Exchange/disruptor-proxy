@@ -10,9 +10,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
+    private static final AtomicInteger UNIQUE_GENERATED_CLASS_NAME_COUNTER = new AtomicInteger();
     private static final boolean DEBUG = false;
 
     private final ClassPool classPool;
@@ -38,7 +40,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy)
     {
-        final StringBuilder proxyClassName = new StringBuilder("_proxy").append(definition.getSimpleName());
+        final StringBuilder proxyClassName = new StringBuilder("_proxy").append(definition.getSimpleName()).append('_').append(UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
         final CtClass ctClass = classPool.makeClass(proxyClassName.toString());
         
         addInterface(ctClass, definition);
@@ -226,7 +228,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     @SuppressWarnings("unchecked")
     private <T> Invoker generateInvoker(final Class<T> definition, final Method method)
     {
-        final StringBuilder invokerClassName = new StringBuilder("_invoker").append(definition.getSimpleName()).append(method.getName());
+        final StringBuilder invokerClassName = new StringBuilder("_invoker").append(definition.getSimpleName()).
+                append(method.getName()).append('_').append(UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
 
         final Class<?>[] parameterTypes = method.getParameterTypes();
         for(final Class<?> paramType : parameterTypes)

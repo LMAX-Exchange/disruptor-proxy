@@ -5,10 +5,12 @@ import com.lmax.disruptor.EventHandler;
 public final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInvocation>
 {
     private final T implementation;
+    private final boolean isBatchListener;
 
     public InvokerEventHandler(final T implementation)
     {
         this.implementation = implementation;
+        this.isBatchListener = implementation instanceof BatchListener;
     }
 
     @Override
@@ -16,5 +18,11 @@ public final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInv
     {
         event.getInvoker().invoke(implementation, event.getArguments());
         event.reset();
+
+        if (isBatchListener && endOfBatch)
+        {
+            BatchListener batchListener = (BatchListener) implementation;
+            batchListener.onEndOfBatch();
+        }
     }
 }

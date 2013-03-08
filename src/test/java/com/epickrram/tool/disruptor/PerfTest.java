@@ -17,17 +17,15 @@
 
 package com.epickrram.tool.disruptor;
 
+import com.lmax.disruptor.BusySpinWaitStrategy;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import org.junit.Test;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
-
-import com.lmax.disruptor.BusySpinWaitStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
-
-import org.junit.Test;
-
 
 import static com.epickrram.tool.disruptor.GeneratorType.BYTECODE_GENERATION;
 import static com.epickrram.tool.disruptor.GeneratorType.JDK_REFLECTION;
@@ -103,7 +101,7 @@ public final class PerfTest
                                            final CounterImpl implementation)
     {
         return new RingBufferProxyGeneratorFactory().create(generatorType).
-                createRingBufferProxy(implementation, Counter.class, disruptor, OverflowStrategy.DROP);
+                createRingBufferProxy(implementation, Counter.class, disruptor, OverflowStrategy.BLOCK);
     }
 
     private static final class CounterImpl implements Counter

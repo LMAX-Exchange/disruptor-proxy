@@ -2,11 +2,11 @@ package com.epickrram.tool.disruptor;
 
 public final class ListenerImpl implements Listener
 {
-    private String lastStringValue;
-    private int lastIntValue;
-    private Float lastFloatValue;
-    private int voidInvocationCount = 0;
-    private Double[] lastDoubleArray;
+    private volatile String lastStringValue;
+    private volatile int lastIntValue;
+    private volatile Float lastFloatValue;
+    private volatile int voidInvocationCount = 0;
+    private volatile Double[] lastDoubleArray;
 
     @Override
     public void onString(final String value)
