@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
     private static final AtomicInteger UNIQUE_GENERATED_CLASS_NAME_COUNTER = new AtomicInteger();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private final ClassPool classPool;
 
