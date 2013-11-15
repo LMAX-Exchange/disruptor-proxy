@@ -8,6 +8,7 @@ import javassist.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +41,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy)
     {
-        final StringBuilder proxyClassName = new StringBuilder("_proxy").append(definition.getSimpleName()).append('_').append(UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
+        final StringBuilder proxyClassName = new StringBuilder("_proxy").append(definition.getSimpleName()).append('_').
+                append(UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
         final CtClass ctClass = classPool.makeClass(proxyClassName.toString());
         
         addInterface(ctClass, definition);
@@ -161,7 +163,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
                 append("{\n").
-                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.getPreallocated(sequence);\n").
+                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.get(sequence);\n").
 
                 append("proxyMethodInvocation.ensureCapacity(").
                 append(parameterTypes.length).
