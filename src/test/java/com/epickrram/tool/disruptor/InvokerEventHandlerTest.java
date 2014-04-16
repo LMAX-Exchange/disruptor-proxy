@@ -1,6 +1,5 @@
 package com.epickrram.tool.disruptor;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -37,6 +36,11 @@ public final class InvokerEventHandlerTest
     {
         @Override
         public void invoke(final Object implementation, final Object[] args)
+        {
+        }
+
+        @Override
+        public void invokeWithArgumentHolder(final Object implementation, final Object argumentHolder)
         {
         }
     }

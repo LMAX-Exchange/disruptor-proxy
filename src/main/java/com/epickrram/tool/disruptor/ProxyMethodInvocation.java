@@ -7,6 +7,7 @@ public final class ProxyMethodInvocation
     private Invoker invoker;
     private Object[] arguments = new Object[INITIAL_ARGUMENT_LENGTH];
     private int argumentsLength = INITIAL_ARGUMENT_LENGTH;
+    private Object argumentHolder;
 
     public Invoker getInvoker()
     {
@@ -16,6 +17,16 @@ public final class ProxyMethodInvocation
     public void setInvoker(Invoker invoker)
     {
         this.invoker = invoker;
+    }
+
+    public void setArgumentHolder(final Object argumentHolder)
+    {
+        this.argumentHolder = argumentHolder;
+    }
+
+    public Object getArgumentHolder()
+    {
+        return argumentHolder;
     }
 
     public Object[] getArguments()
@@ -35,6 +46,7 @@ public final class ProxyMethodInvocation
     public void reset()
     {
         invoker = null;
+        argumentHolder = null;
         for(int i = 0; i < argumentsLength; i++)
         {
             arguments[i++] = null;

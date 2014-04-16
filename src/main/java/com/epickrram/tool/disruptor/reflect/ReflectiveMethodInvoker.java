@@ -19,16 +19,31 @@ final class ReflectiveMethodInvoker implements Invoker
     {
         try
         {
+            method.invoke(implementation, (Object[]) null);
+        }
+        catch (IllegalAccessException e)
+        {
+            throw new RuntimeException("Failed to invoke", e);
+        }
+        catch (InvocationTargetException e)
+        {
+            throw new RuntimeException("Failed to invoke", e);
+        }
+    }
+
+    @Override
+    public void invokeWithArgumentHolder(final Object implementation, final Object argumentHolder)
+    {
+        try
+        {
             final int numberOfParameters = method.getParameterTypes().length;
             if(numberOfParameters == 0)
             {
-                method.invoke(implementation, null);
+                method.invoke(implementation, (Object[]) null);
             }
             else
             {
-                final Object[] actualArgs = new Object[numberOfParameters];
-                System.arraycopy(args, 0, actualArgs, 0, numberOfParameters);
-                method.invoke(implementation, actualArgs);
+                method.invoke(implementation, (Object[]) argumentHolder);
             }
         }
         catch (IllegalAccessException e)
