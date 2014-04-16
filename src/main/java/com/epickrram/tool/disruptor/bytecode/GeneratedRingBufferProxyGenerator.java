@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
     private static final AtomicInteger UNIQUE_GENERATED_CLASS_NAME_COUNTER = new AtomicInteger();
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private final ClassPool classPool;
 
@@ -41,9 +41,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy)
     {
-        final StringBuilder proxyClassName = new StringBuilder("_proxy").append(definition.getSimpleName()).append('_').
-                append(UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
-        final CtClass ctClass = classPool.makeClass(proxyClassName.toString());
+        final CtClass ctClass = classPool.makeClass("_proxy" + definition.getSimpleName() + '_' +
+                UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
         
         addInterface(ctClass, definition);
         makePublicFinal(ctClass);
@@ -111,19 +110,14 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
     private void createFields(final Map<Method, Invoker> methodToInvokerMap, final CtClass ctClass)
     {
-        final StringBuilder ringBufferFieldSrc = new StringBuilder();
-        ringBufferFieldSrc.append("private final ").append(RingBuffer.class.getName()).append(" ringBuffer;");
-        createField(ctClass, ringBufferFieldSrc.toString());
+        createField(ctClass, "private final " + RingBuffer.class.getName() + " ringBuffer;");
 
         for(final Method method : methodToInvokerMap.keySet())
         {
             final Invoker invoker = methodToInvokerMap.get(method);
-            final StringBuilder fieldSrc = new StringBuilder("private final ").
-                    append(invoker.getClass().getName()).append(" _").
-                    append(invoker.getClass().getName()).append(" = new ").
-                    append(invoker.getClass().getName()).append("();");
 
-            createField(ctClass, fieldSrc.toString());
+            createField(ctClass, "private final " + invoker.getClass().getName() + " _" +
+                    invoker.getClass().getName() + " = new " + invoker.getClass().getName() + "();");
         }
     }
 
