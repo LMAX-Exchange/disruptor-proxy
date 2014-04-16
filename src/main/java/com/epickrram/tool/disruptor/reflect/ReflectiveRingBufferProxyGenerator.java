@@ -61,6 +61,10 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
                     System.arraycopy(args, 0, copyOfArgs, 0, args.length);
                     proxyMethodInvocation.setArgumentHolder(copyOfArgs);
                 }
+                else
+                {
+                    proxyMethodInvocation.emptyArguments();
+                }
                 proxyMethodInvocation.setInvoker(methodToInvokerMap.get(method));
             }
             finally

@@ -17,18 +17,7 @@ final class ReflectiveMethodInvoker implements Invoker
     @Override
     public void invoke(Object implementation, Object[] args)
     {
-        try
-        {
-            method.invoke(implementation, (Object[]) null);
-        }
-        catch (IllegalAccessException e)
-        {
-            throw new RuntimeException("Failed to invoke", e);
-        }
-        catch (InvocationTargetException e)
-        {
-            throw new RuntimeException("Failed to invoke", e);
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override

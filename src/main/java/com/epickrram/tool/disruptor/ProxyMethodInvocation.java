@@ -3,6 +3,7 @@ package com.epickrram.tool.disruptor;
 public final class ProxyMethodInvocation
 {
     public static final int INITIAL_ARGUMENT_LENGTH = 1;
+    private static final Object EMPTY_ARGUMENTS_MARKER = new Object();
 
     private Invoker invoker;
     private Object[] arguments = new Object[INITIAL_ARGUMENT_LENGTH];
@@ -22,6 +23,16 @@ public final class ProxyMethodInvocation
     public void setArgumentHolder(final Object argumentHolder)
     {
         this.argumentHolder = argumentHolder;
+    }
+
+    public void emptyArguments()
+    {
+        argumentHolder = EMPTY_ARGUMENTS_MARKER;
+    }
+
+    public boolean hasArguments()
+    {
+        return argumentHolder == null || argumentHolder == EMPTY_ARGUMENTS_MARKER;
     }
 
     public Object getArgumentHolder()

@@ -20,6 +20,10 @@ public final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInv
         {
             event.getInvoker().invokeWithArgumentHolder(implementation, event.getArgumentHolder());
         }
+        else if(!event.hasArguments())
+        {
+            event.getInvoker().invokeWithArgumentHolder(implementation, null);
+        }
         else
         {
             event.getInvoker().invoke(implementation, event.getArguments());
