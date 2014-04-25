@@ -10,14 +10,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.*;
 
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
-    private static final AtomicInteger UNIQUE_GENERATED_CLASS_NAME_COUNTER = new AtomicInteger();
-    private static final boolean DEBUG = false;
-
     private final ClassPool classPool;
 
     public GeneratedRingBufferProxyGenerator()
@@ -33,26 +30,30 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
-        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition);
+        final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
+        argumentHolderGenerator.createArgumentHolderClass(definition);
 
-        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
+        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition, argumentHolderGenerator);
+
+        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
     }
 
     private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
-                                final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy)
+                                final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy,
+                                final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        final CtClass ctClass = classPool.makeClass("_proxy" + definition.getSimpleName() + '_' +
-                UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
-        
-        addInterface(ctClass, definition);
+        final CtClass ctClass = makeClass(classPool, "_proxy" + definition.getSimpleName() + '_' +
+                getUniqueIdentifier());
+
+        addInterface(ctClass, definition, classPool);
         makePublicFinal(ctClass);
 
         createFields(methodToInvokerMap, ctClass);
         createConstructor(ctClass);
 
-        for(final Method method : definition.getDeclaredMethods())
+        for (final Method method : definition.getDeclaredMethods())
         {
-            createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy);
+            createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy, argumentHolderGenerator);
         }
 
         return instantiate(ctClass, ringBuffer);
@@ -112,7 +113,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         createField(ctClass, "private final " + RingBuffer.class.getName() + " ringBuffer;");
 
-        for(final Method method : methodToInvokerMap.keySet())
+        for (final Method method : methodToInvokerMap.keySet())
         {
             final Invoker invoker = methodToInvokerMap.get(method);
 
@@ -122,7 +123,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     }
 
     private void createRingBufferPublisherMethod(final CtClass ctClass, final Method method, final Invoker invoker,
-                                                 final OverflowStrategy overflowStrategy)
+                                                 final OverflowStrategy overflowStrategy,
+                                                 final ArgumentHolderGenerator argumentHolderGenerator)
     {
         final StringBuilder methodSrc = new StringBuilder("public void ").append(method.getName()).append("(");
         final Class<?>[] parameterTypes = method.getParameterTypes();
@@ -131,7 +133,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         {
             final Class<?> parameterType = parameterTypes[i];
 
-            if(parameterType.isArray())
+            if (parameterType.isArray())
             {
                 methodSrc.append(parameterType.getComponentType().getName()).append("[] ").append(paramId++);
             }
@@ -140,14 +142,14 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
                 methodSrc.append(parameterType.getName()).append(' ').append(paramId++);
             }
 
-            if(i < parameterTypesLength - 1)
+            if (i < parameterTypesLength - 1)
             {
                 methodSrc.append(", ");
             }
         }
         methodSrc.append(")\n{\n");
 
-        if(overflowStrategy == OverflowStrategy.DROP)
+        if (overflowStrategy == OverflowStrategy.DROP)
         {
             methodSrc.append("if(!ringBuffer.hasAvailableCapacity(1))\n");
             methodSrc.append("{");
@@ -157,25 +159,27 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
                 append("{\n").
-                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.get(sequence);\n").
+                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.get(sequence);\n");
 
-                append("proxyMethodInvocation.ensureCapacity(").
-                append(parameterTypes.length).
-                append(");\n").
-                append("final Object[] args = proxyMethodInvocation.getArguments();\n");
+        final String argumentHolderClass = argumentHolderGenerator.getGeneratedClassName();
 
-        for(int i = 0; i < parameterTypes.length; i++)
+        methodSrc.append("final ").append(argumentHolderClass).append(" holder = new ").
+                append(argumentHolderClass).append("();\n");
+
+        argumentHolderGenerator.resetFieldNames();
+
+        if (parameterTypes.length == 0)
         {
-            final Class<?> parameterType = parameterTypes[i];
-            if(parameterType.isPrimitive())
+            methodSrc.append("proxyMethodInvocation.emptyArguments();\n");
+        }
+        else
+        {
+            methodSrc.append("proxyMethodInvocation.setArgumentHolder(holder);\n");
+            for (int i = 0; i < parameterTypes.length; i++)
             {
-                methodSrc.append("args[").append(i).append("] = ").append(Primitives.getWrapperClassName(parameterType)).
-                        append(".valueOf(").
-                        append((char) ('a' + i)).append(");\n");
-            }
-            else
-            {
-                methodSrc.append("args[").append(i).append("] = ").append((char) ('a' + i)).append(";\n");
+                final Class<?> parameterType = parameterTypes[i];
+                final String holderField = argumentHolderGenerator.getNextFieldNameForType(parameterType);
+                methodSrc.append("holder.").append(holderField).append(" = ").append((char) ('a' + i)).append(";");
             }
         }
 
@@ -189,48 +193,19 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
                 append("}\n");
         methodSrc.append("}\n");
 
-        if(DEBUG)
-        {
-            System.out.println(methodSrc);
-        }
-
-        try
-        {
-            ctClass.addMethod(CtMethod.make(methodSrc.toString(), ctClass));
-        }
-        catch (CannotCompileException e)
-        {
-            throw new RuntimeException("Unable to compile class", e);
-        }
-    }
-
-    private void createField(final CtClass ctClass, final String fieldSrc)
-    {
-        try
-        {
-            if(DEBUG)
-            {
-                System.out.println(fieldSrc);
-            }
-
-            ctClass.addField(CtField.make(fieldSrc, ctClass));
-        }
-        catch (CannotCompileException e)
-        {
-            throw new RuntimeException("Unable to generate field: " + fieldSrc, e);
-        }
+        createMethod(ctClass, methodSrc.toString());
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Invoker generateInvoker(final Class<T> definition, final Method method)
+    private <T> Invoker generateInvoker(final Class<T> definition, final Method method, final ArgumentHolderGenerator argumentHolderGenerator)
     {
         final StringBuilder invokerClassName = new StringBuilder("_invoker").append(definition.getSimpleName()).
-                append(method.getName()).append('_').append(UNIQUE_GENERATED_CLASS_NAME_COUNTER.incrementAndGet());
+                append(method.getName()).append('_').append(getUniqueIdentifier());
 
         final Class<?>[] parameterTypes = method.getParameterTypes();
-        for(final Class<?> paramType : parameterTypes)
+        for (final Class<?> paramType : parameterTypes)
         {
-            if(paramType.isArray())
+            if (paramType.isArray())
             {
                 invokerClassName.append(paramType.getComponentType().getSimpleName()).append("Array");
             }
@@ -240,19 +215,30 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             }
         }
 
-        final CtClass ctClass = classPool.makeClass(invokerClassName.toString());
-        addInterface(ctClass, Invoker.class);
+        final CtClass ctClass = makeClass(classPool, invokerClassName.toString());
+        addInterface(ctClass, Invoker.class, classPool);
         makePublicFinal(ctClass);
-        final StringBuilder methodSrc = new StringBuilder("public void invoke(").append("Object").
-                append(" implementation, Object[] args) {\n((").append(definition.getName().replace('$', '.')).
+
+        final StringBuilder methodSrc = new StringBuilder("public void invokeWithArgumentHolder(").append("Object").
+                append(" implementation, Object argumentHolder) {\n");
+
+        if (parameterTypes.length != 0)
+        {
+            methodSrc.append("final ").append(argumentHolderGenerator.getGeneratedClassName()).append(" holder = ").
+                    append("(").append(argumentHolderGenerator.getGeneratedClassName()).append(") argumentHolder;\n");
+        }
+
+        methodSrc.append("((").append(definition.getName().replace('$', '.')).
                 append(")implementation).").append(method.getName()).append('(');
 
-        appendParameters(parameterTypes, methodSrc);
+
+        appendParametersFromArgumentHolder(parameterTypes, methodSrc, argumentHolderGenerator);
 
         methodSrc.append(");\n}\n");
 
-        if(DEBUG)
+        if (DEBUG)
         {
+            System.out.println("Created method for " + invokerClassName.toString());
             System.out.println(methodSrc);
         }
 
@@ -277,60 +263,31 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
     }
 
-    private void makePublicFinal(final CtClass ctClass)
+    private <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> definition,
+                                                              final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        ctClass.setModifiers(Modifier.PUBLIC | Modifier.FINAL);
-    }
-
-    private void addInterface(final CtClass ctClass, final Class<?> interfaceClass)
-    {
-        try
-        {
-            ctClass.addInterface(classPool.get(interfaceClass.getName()));
-        }
-        catch (NotFoundException e)
-        {
-            throw new RuntimeException("Cannot load class: " + interfaceClass.getName(), e);
-        }
-    }
-
-    private <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> definition)
-    {
-        final Map<Method, Invoker> methodToInvokerMap = new ConcurrentHashMap<Method, Invoker>();
+        final Map<Method, Invoker> methodToInvokerMap = new HashMap<Method, Invoker>();
 
         final Method[] declaredMethods = definition.getDeclaredMethods();
 
         for (Method declaredMethod : declaredMethods)
         {
-            methodToInvokerMap.put(declaredMethod, generateInvoker(definition, declaredMethod));
+            methodToInvokerMap.put(declaredMethod, generateInvoker(definition, declaredMethod, argumentHolderGenerator));
         }
 
         return methodToInvokerMap;
     }
 
-    private void appendParameters(final Class<?>[] parameterTypes, final StringBuilder methodSrc)
+    private void appendParametersFromArgumentHolder(final Class<?>[] parameterTypes, final StringBuilder methodSrc,
+                                                    final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        for(int i = 0; i < parameterTypes.length; i++)
+        argumentHolderGenerator.resetFieldNames();
+        for (int i = 0; i < parameterTypes.length; i++)
         {
             final Class<?> parameterType = parameterTypes[i];
-            final boolean primitive = parameterType.isPrimitive();
+            methodSrc.append("holder.").append(argumentHolderGenerator.getNextFieldNameForType(parameterType));
 
-            if(primitive)
-            {
-                methodSrc.append("((").append(Primitives.getWrapperClassName(parameterType)).append(") args[").
-                        append(i).append("]).").append(parameterType.getName()).append("Value()");
-            }
-            else if(parameterType.isArray())
-            {
-                final Class<?> arrayComponentType = parameterType.getComponentType();
-                methodSrc.append('(').append(arrayComponentType.getName()).append("[]) args[").append(i).append(']');
-            }
-            else
-            {
-                methodSrc.append('(').append(parameterType.getName()).append(") args[").append(i).append(']');
-            }
-
-            if(i < parameterTypes.length  - 1)
+            if (i < parameterTypes.length - 1)
             {
                 methodSrc.append(", ");
             }
