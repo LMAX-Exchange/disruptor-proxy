@@ -46,7 +46,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         final int bufferSize = ringBuffer.getBufferSize();
         for(int i = 0; i < bufferSize; i++)
         {
-            ringBuffer.get(i).setArgumentHolder(instantiate(argumentHolderGenerator.getGeneratedClass(), new Class[] {}));
+            ringBuffer.get(i).setArgumentHolder((Resetable) instantiate(argumentHolderGenerator.getGeneratedClass(), new Class[] {}));
         }
     }
 

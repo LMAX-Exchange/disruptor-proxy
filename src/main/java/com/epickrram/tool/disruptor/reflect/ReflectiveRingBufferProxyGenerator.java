@@ -24,9 +24,20 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         final RingBufferInvocationHandler<T> invocationHandler =
                 new RingBufferInvocationHandler<T>(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
 
+        preallocateArgumentHolders(disruptor.getRingBuffer());
+
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
         return (T)Proxy.newProxyInstance(classLoader, new Class<?>[]{definition}, invocationHandler);
+    }
+
+    private void preallocateArgumentHolders(final RingBuffer<ProxyMethodInvocation> ringBuffer)
+    {
+        final int bufferSize = ringBuffer.getBufferSize();
+        for(int i = 0; i < bufferSize; i++)
+        {
+            ringBuffer.get(i).setArgumentHolder(new ObjectArrayHolder());
+        }
     }
 
     private static final class RingBufferInvocationHandler<T> implements InvocationHandler
@@ -55,15 +66,16 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
             try
             {
                 final ProxyMethodInvocation proxyMethodInvocation = ringBuffer.get(sequence);
+                final ObjectArrayHolder argumentHolder = (ObjectArrayHolder) proxyMethodInvocation.getArgumentHolder();
                 if(args != null)
                 {
                     final Object[] copyOfArgs = new Object[args.length];
                     System.arraycopy(args, 0, copyOfArgs, 0, args.length);
-                    proxyMethodInvocation.setArgumentHolder(copyOfArgs);
+                    argumentHolder.set(copyOfArgs);
                 }
                 else
                 {
-                    proxyMethodInvocation.setArgumentHolder(null);
+                    argumentHolder.set(null);
                 }
                 proxyMethodInvocation.setInvoker(methodToInvokerMap.get(method));
             }

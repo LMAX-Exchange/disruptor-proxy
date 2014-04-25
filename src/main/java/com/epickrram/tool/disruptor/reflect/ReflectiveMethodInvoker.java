@@ -26,7 +26,7 @@ final class ReflectiveMethodInvoker implements Invoker
             }
             else
             {
-                method.invoke(implementation, (Object[]) argumentHolder);
+                method.invoke(implementation, ((ObjectArrayHolder) argumentHolder).get());
             }
         }
         catch (IllegalAccessException e)

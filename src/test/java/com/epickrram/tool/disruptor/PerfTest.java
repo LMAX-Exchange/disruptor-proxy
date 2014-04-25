@@ -40,7 +40,9 @@ public final class PerfTest
     @Test
     public void comparePerformance() throws Exception
     {
+        attemptToClearGarbage();
         runTest(JDK_REFLECTION);
+        attemptToClearGarbage();
         runTest(BYTECODE_GENERATION);
     }
 
@@ -84,7 +86,7 @@ public final class PerfTest
 
         while(counter.getInvocationCountReachedTimestamp() == 0L)
         {
-            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(5L));
+            LockSupport.parkNanos(1L);
         }
 
         final long durationNanos = counter.getInvocationCountReachedTimestamp() - startNanos;
@@ -102,6 +104,16 @@ public final class PerfTest
     {
         return new RingBufferProxyGeneratorFactory().create(generatorType).
                 createRingBufferProxy(implementation, Counter.class, disruptor, OverflowStrategy.BLOCK);
+    }
+
+    private void attemptToClearGarbage() throws InterruptedException
+    {
+        System.gc();
+        Thread.sleep(1000L);
+        System.gc();
+        Thread.sleep(1000L);
+        System.gc();
+        Thread.sleep(1000L);
     }
 
     private static final class CounterImpl implements Counter

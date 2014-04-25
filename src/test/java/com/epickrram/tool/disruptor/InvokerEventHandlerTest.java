@@ -1,5 +1,6 @@
 package com.epickrram.tool.disruptor;
 
+import com.epickrram.tool.disruptor.reflect.ObjectArrayHolder;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -14,6 +15,7 @@ public final class InvokerEventHandlerTest
         final BatchAwareListenerImpl batchAwareListener = new BatchAwareListenerImpl();
         final InvokerEventHandler<Listener> eventHandler = new InvokerEventHandler<Listener>(batchAwareListener);
         final ProxyMethodInvocation proxyMethodInvocation = new ProxyMethodInvocation();
+        proxyMethodInvocation.setArgumentHolder(new ObjectArrayHolder());
         proxyMethodInvocation.setInvoker(new NoOpInvoker());
 
         eventHandler.onEvent(proxyMethodInvocation, 17L, true);
@@ -27,6 +29,7 @@ public final class InvokerEventHandlerTest
         final ListenerImpl batchAwareListener = new ListenerImpl();
         final InvokerEventHandler<Listener> eventHandler = new InvokerEventHandler<Listener>(batchAwareListener);
         final ProxyMethodInvocation proxyMethodInvocation = new ProxyMethodInvocation();
+        proxyMethodInvocation.setArgumentHolder(new ObjectArrayHolder());
         proxyMethodInvocation.setInvoker(new NoOpInvoker());
 
         eventHandler.onEvent(proxyMethodInvocation, 17L, true);

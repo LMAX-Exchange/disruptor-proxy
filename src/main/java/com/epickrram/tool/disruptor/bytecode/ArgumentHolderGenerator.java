@@ -17,6 +17,7 @@ package com.epickrram.tool.disruptor.bytecode;
 //////////////////////////////////////////////////////////////////////////////////
 
 
+import com.epickrram.tool.disruptor.Resetable;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -47,24 +48,9 @@ public final class ArgumentHolderGenerator
         final CtClass ctClass = makeClass(classPool, "_argumentHolder_" + type.getSimpleName() + "_" + getUniqueIdentifier());
 
         parameterTypeCounts = helper.getParameterTypeCounts(type);
-        for (Map.Entry<Class<?>, Integer> entry : parameterTypeCounts.entrySet())
-        {
-            final StringBuilder buffer = new StringBuilder();
-            final char suffix = 'a';
-            final int parameterCount = entry.getValue();
-
-            final Class<?> parameterType = entry.getKey();
-            final String parameterTypeName = sanitiseParameterType(parameterType);
-            for(int i = 0; i < parameterCount; i++)
-            {
-                buffer.setLength(0);
-                buffer.append("public ").append(parameterTypeName).append(' ');
-                buffer.append(sanitiseParameterName(parameterTypeName));
-                buffer.append('_').append((char) (suffix + i));
-                buffer.append(";\n");
-                createField(ctClass, buffer.toString());
-            }
-        }
+        createFields(ctClass);
+        createMethod(ctClass, generateResetMethod());
+        addInterface(ctClass, Resetable.class, classPool);
 
         try
         {
@@ -105,6 +91,53 @@ public final class ArgumentHolderGenerator
     public Class<?> getGeneratedClass()
     {
         return generatedClass;
+    }
+
+    private void createFields(final CtClass ctClass)
+    {
+        for (Map.Entry<Class<?>, Integer> entry : parameterTypeCounts.entrySet())
+        {
+            final StringBuilder buffer = new StringBuilder();
+            final char suffix = 'a';
+            final int parameterCount = entry.getValue();
+
+            final Class<?> parameterType = entry.getKey();
+            final String parameterTypeName = sanitiseParameterType(parameterType);
+            for(int i = 0; i < parameterCount; i++)
+            {
+                buffer.setLength(0);
+                buffer.append("public ").append(parameterTypeName).append(' ');
+                buffer.append(sanitiseParameterName(parameterTypeName));
+                buffer.append('_').append((char) (suffix + i));
+                buffer.append(";\n");
+                createField(ctClass, buffer.toString());
+            }
+        }
+    }
+
+    private String generateResetMethod()
+    {
+        final StringBuilder buffer = new StringBuilder();
+
+        buffer.append("public void reset() {\n");
+        for (Map.Entry<Class<?>, Integer> entry : parameterTypeCounts.entrySet())
+        {
+            final char suffix = 'a';
+            final int parameterCount = entry.getValue();
+
+            final Class<?> parameterType = entry.getKey();
+            if(!parameterType.isPrimitive())
+            {
+                for(int i = 0; i < parameterCount; i++)
+                {
+                    buffer.append(getSanitisedFieldName(parameterType)).append("_").
+                            append((char) (suffix + i)).append(" = null;\n");
+                }
+            }
+        }
+        buffer.append("}\n");
+
+        return buffer.toString();
     }
 
     private static String getSanitisedFieldName(final Class<?> parameterType)

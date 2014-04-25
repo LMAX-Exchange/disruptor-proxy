@@ -3,7 +3,7 @@ package com.epickrram.tool.disruptor;
 public final class ProxyMethodInvocation
 {
     private Invoker invoker;
-    private Object argumentHolder;
+    private Resetable argumentHolder;
 
     public Invoker getInvoker()
     {
@@ -15,7 +15,7 @@ public final class ProxyMethodInvocation
         this.invoker = invoker;
     }
 
-    public void setArgumentHolder(final Object argumentHolder)
+    public void setArgumentHolder(final Resetable argumentHolder)
     {
         this.argumentHolder = argumentHolder;
     }
@@ -27,5 +27,6 @@ public final class ProxyMethodInvocation
 
     public void reset()
     {
+        argumentHolder.reset();
     }
 }
