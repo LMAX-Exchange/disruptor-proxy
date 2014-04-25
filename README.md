@@ -35,10 +35,7 @@ Tests performed on `Intel(R) Core(TM) i7-2670QM CPU @ 2.20GHz`
 
 `[BYTECODE_GENERATION] - Ops per second: 18313904.00, avg latency 54ns`
 
-Issues
-------
 
-Currently creates wrapper objects (`java.lang`) for any primitive method arguments, so generates unnecessary garbage.
 
 Dependencies
 ------------
