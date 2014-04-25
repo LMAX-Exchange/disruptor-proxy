@@ -33,9 +33,21 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
         argumentHolderGenerator.createArgumentHolderClass(definition);
 
+        prefillArgumentHolderObjects(disruptor.getRingBuffer(), argumentHolderGenerator);
+
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition, argumentHolderGenerator);
 
         return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
+    }
+
+    private void prefillArgumentHolderObjects(final RingBuffer<ProxyMethodInvocation> ringBuffer,
+                                              final ArgumentHolderGenerator argumentHolderGenerator)
+    {
+        final int bufferSize = ringBuffer.getBufferSize();
+        for(int i = 0; i < bufferSize; i++)
+        {
+            ringBuffer.get(i).setArgumentHolder(instantiate(argumentHolderGenerator.getGeneratedClass(), new Class[] {}));
+        }
     }
 
     private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
@@ -56,22 +68,30 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy, argumentHolderGenerator);
         }
 
-        return instantiate(ctClass, ringBuffer);
+        return instantiateProxy(ctClass, ringBuffer);
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T instantiate(final CtClass ctClass, final RingBuffer<ProxyMethodInvocation> ringBuffer)
+    private <T> T instantiateProxy(final CtClass ctClass, final RingBuffer<ProxyMethodInvocation> ringBuffer)
     {
         try
         {
-            final Class generatedClass = ctClass.toClass();
-
-            final Constructor jdkConstructor = generatedClass.getConstructor(new Class[]{RingBuffer.class});
-            return (T) jdkConstructor.newInstance(ringBuffer);
+            return instantiate(ctClass.toClass(), new Class[]{RingBuffer.class}, ringBuffer);
         }
         catch (CannotCompileException e)
         {
             throw new RuntimeException("Unable to compile class", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T instantiate(final Class generatedClass, final Class[] constructorArgumentTypes,
+                              final Object... args)
+    {
+        try
+        {
+
+            final Constructor jdkConstructor = generatedClass.getConstructor(constructorArgumentTypes);
+            return (T) jdkConstructor.newInstance(args);
         }
         catch (NoSuchMethodException e)
         {
@@ -163,12 +183,11 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         final String argumentHolderClass = argumentHolderGenerator.getGeneratedClassName();
 
-        methodSrc.append("final ").append(argumentHolderClass).append(" holder = new ").
-                append(argumentHolderClass).append("();\n");
+        methodSrc.append("final ").append(argumentHolderClass).append(" holder = (").
+                append(argumentHolderClass).append(") proxyMethodInvocation.getArgumentHolder();\n");
 
         argumentHolderGenerator.resetFieldNames();
 
-        methodSrc.append("proxyMethodInvocation.setArgumentHolder(holder);\n");
         for (int i = 0; i < parameterTypes.length; i++)
         {
             final Class<?> parameterType = parameterTypes[i];

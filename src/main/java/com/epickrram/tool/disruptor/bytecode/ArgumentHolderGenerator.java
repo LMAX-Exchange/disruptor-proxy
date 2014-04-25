@@ -33,6 +33,7 @@ public final class ArgumentHolderGenerator
     private final ClassPool classPool;
 
     private String generatedClassName;
+    private Class<?> generatedClass;
     private Map<Class<?>,Integer> parameterTypeCounts;
     private Map<Class<?>, Character> parameterFieldSuffix = new HashMap<Class<?>, Character>();
 
@@ -69,7 +70,7 @@ public final class ArgumentHolderGenerator
         {
             ctClass.addConstructor(CtNewConstructor.defaultConstructor(ctClass));
             makePublicFinal(ctClass);
-            ctClass.toClass();
+            generatedClass = ctClass.toClass();
         }
         catch (CannotCompileException e)
         {
@@ -99,6 +100,11 @@ public final class ArgumentHolderGenerator
     public String getGeneratedClassName()
     {
         return generatedClassName;
+    }
+
+    public Class<?> getGeneratedClass()
+    {
+        return generatedClass;
     }
 
     private static String getSanitisedFieldName(final Class<?> parameterType)
