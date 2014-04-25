@@ -35,11 +35,6 @@ public final class InvokerEventHandlerTest
     private static class NoOpInvoker implements Invoker
     {
         @Override
-        public void invoke(final Object implementation, final Object[] args)
-        {
-        }
-
-        @Override
         public void invokeWithArgumentHolder(final Object implementation, final Object argumentHolder)
         {
         }

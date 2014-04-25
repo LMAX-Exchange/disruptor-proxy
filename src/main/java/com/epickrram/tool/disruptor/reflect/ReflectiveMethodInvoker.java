@@ -15,12 +15,6 @@ final class ReflectiveMethodInvoker implements Invoker
     }
 
     @Override
-    public void invoke(Object implementation, Object[] args)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void invokeWithArgumentHolder(final Object implementation, final Object argumentHolder)
     {
         try

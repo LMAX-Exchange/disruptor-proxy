@@ -39,6 +39,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
             listener.onFloatAndInt((float) i, i);
             listener.onVoid();
             listener.onObjectArray(new Double[]{(double) i});
+            listener.onMixedMultipleArgs(0, 1, "a", "b", 2);
         }
 
         disruptor.shutdown();
@@ -48,6 +49,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getLastFloatValue(), is((float) 2));
         assertThat(implementation.getLastIntValue(), is(2));
         assertThat(implementation.getVoidInvocationCount(), is(3));
+        assertThat(implementation.getMixedArgsInvocationCount(), is(3));
         assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
     }
 

@@ -168,19 +168,12 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         argumentHolderGenerator.resetFieldNames();
 
-        if (parameterTypes.length == 0)
+        methodSrc.append("proxyMethodInvocation.setArgumentHolder(holder);\n");
+        for (int i = 0; i < parameterTypes.length; i++)
         {
-            methodSrc.append("proxyMethodInvocation.emptyArguments();\n");
-        }
-        else
-        {
-            methodSrc.append("proxyMethodInvocation.setArgumentHolder(holder);\n");
-            for (int i = 0; i < parameterTypes.length; i++)
-            {
-                final Class<?> parameterType = parameterTypes[i];
-                final String holderField = argumentHolderGenerator.getNextFieldNameForType(parameterType);
-                methodSrc.append("holder.").append(holderField).append(" = ").append((char) ('a' + i)).append(";");
-            }
+            final Class<?> parameterType = parameterTypes[i];
+            final String holderField = argumentHolderGenerator.getNextFieldNameForType(parameterType);
+            methodSrc.append("holder.").append(holderField).append(" = ").append((char) ('a' + i)).append(";");
         }
 
         methodSrc.append("proxyMethodInvocation.setInvoker(_").append(invoker.getClass().getName()).

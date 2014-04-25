@@ -24,6 +24,11 @@ public final class BatchAwareListenerImpl implements Listener, BatchListener
     {
     }
 
+    @Override
+    public void onMixedMultipleArgs(final int int0, final int int1, final String s0, final String s1, final int i2)
+    {
+    }
+
     public int getBatchCount()
     {
         return batchCount;

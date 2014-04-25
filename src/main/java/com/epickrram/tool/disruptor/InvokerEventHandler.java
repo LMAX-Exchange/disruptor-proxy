@@ -16,18 +16,7 @@ public final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInv
     @Override
     public void onEvent(final ProxyMethodInvocation event, final long sequence, final boolean endOfBatch) throws Exception
     {
-        if(event.getArgumentHolder() != null)
-        {
-            event.getInvoker().invokeWithArgumentHolder(implementation, event.getArgumentHolder());
-        }
-        else if(!event.hasArguments())
-        {
-            event.getInvoker().invokeWithArgumentHolder(implementation, null);
-        }
-        else
-        {
-            event.getInvoker().invoke(implementation, event.getArguments());
-        }
+        event.getInvoker().invokeWithArgumentHolder(implementation, event.getArgumentHolder());
         event.reset();
 
         if (isBatchListener && endOfBatch)

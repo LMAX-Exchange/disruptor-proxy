@@ -54,19 +54,15 @@ public final class ArgumentHolderGenerator
 
             final Class<?> parameterType = entry.getKey();
             final String parameterTypeName = sanitiseParameterType(parameterType);
-            buffer.append("public ").append(parameterTypeName).append(' ');
             for(int i = 0; i < parameterCount; i++)
             {
+                buffer.setLength(0);
+                buffer.append("public ").append(parameterTypeName).append(' ');
                 buffer.append(sanitiseParameterName(parameterTypeName));
                 buffer.append('_').append((char) (suffix + i));
-                if(i < parameterCount - 1)
-                {
-                    buffer.append(", ");
-                }
+                buffer.append(";\n");
+                createField(ctClass, buffer.toString());
             }
-            buffer.append(";\n");
-
-            createField(ctClass, buffer.toString());
         }
 
         try
