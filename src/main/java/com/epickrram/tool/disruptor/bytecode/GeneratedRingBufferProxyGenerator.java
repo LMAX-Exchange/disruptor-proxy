@@ -161,7 +161,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
                 append("{\n").
-                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.getPreallocated(sequence);\n").
+                append("final ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) ringBuffer.get(sequence);\n").
 
                 append("proxyMethodInvocation.ensureCapacity(").
                 append(parameterTypes.length).
