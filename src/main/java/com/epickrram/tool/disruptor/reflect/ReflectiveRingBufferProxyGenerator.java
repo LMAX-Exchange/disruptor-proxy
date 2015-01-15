@@ -31,6 +31,30 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         return (T)Proxy.newProxyInstance(classLoader, new Class<?>[]{definition}, invocationHandler);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T createRingBufferProxy(Class<T> definition, Disruptor<ProxyMethodInvocation> disruptor,
+                                       OverflowStrategy overflowStrategy, T... implementations)
+    {
+        InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
+        for (int i = 0; i < implementations.length; i++)
+        {
+            handlers[i] = new InvokerEventHandler<T>(implementations[i], false);
+            disruptor.handleEventsWith(handlers[i]);
+        }
+        disruptor.after(handlers).then(new ResetHandler());
+
+        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition);
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+        final RingBufferInvocationHandler<T> invocationHandler =
+                new RingBufferInvocationHandler<T>(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
+
+        preallocateArgumentHolders(disruptor.getRingBuffer());
+
+        return (T)Proxy.newProxyInstance(classLoader, new Class<?>[]{definition}, invocationHandler);
+    }
+
     private void preallocateArgumentHolders(final RingBuffer<ProxyMethodInvocation> ringBuffer)
     {
         final int bufferSize = ringBuffer.getBufferSize();

@@ -54,6 +54,46 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     }
 
     @Test
+    public void shouldProxyMultipleImplementations()
+    {
+        final ExecutorService executor = Executors.newCachedThreadPool();
+        final Disruptor<ProxyMethodInvocation> disruptor =
+                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, executor);
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+
+        final ListenerImpl[] implementations = new ListenerImpl[]
+        {
+            new ListenerImpl(), new ListenerImpl()
+        };
+
+        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementations);
+        disruptor.start();
+
+        for(int i = 0; i < 3; i++)
+        {
+            listener.onString("single string " + i);
+            listener.onFloatAndInt((float) i, i);
+            listener.onVoid();
+            listener.onObjectArray(new Double[]{(double) i});
+            listener.onMixedMultipleArgs(0, 1, "a", "b", 2);
+        }
+
+        disruptor.shutdown();
+        executor.shutdown();
+
+        for (ListenerImpl implementation : implementations)
+        {
+            assertThat(implementation.getLastStringValue(), is("single string 2"));
+            assertThat(implementation.getLastFloatValue(), is((float) 2));
+            assertThat(implementation.getLastIntValue(), is(2));
+            assertThat(implementation.getVoidInvocationCount(), is(3));
+            assertThat(implementation.getMixedArgsInvocationCount(), is(3));
+            assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
+        }
+    }
+
+    @Test
     public void shouldDropMessagesIfRingBufferIsFull() throws Exception
     {
         final ExecutorService executor = Executors.newSingleThreadExecutor();

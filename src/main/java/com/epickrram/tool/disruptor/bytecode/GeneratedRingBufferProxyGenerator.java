@@ -1,8 +1,10 @@
 package com.epickrram.tool.disruptor.bytecode;
 
 import com.epickrram.tool.disruptor.*;
+import com.lmax.disruptor.IgnoreExceptionHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+
 import javassist.*;
 
 import java.lang.reflect.Constructor;
@@ -29,6 +31,29 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
                                        final OverflowStrategy overflowStrategy)
     {
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
+
+        final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
+        argumentHolderGenerator.createArgumentHolderClass(definition);
+
+        prefillArgumentHolderObjects(disruptor.getRingBuffer(), argumentHolderGenerator);
+
+        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition, argumentHolderGenerator);
+
+        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T createRingBufferProxy(Class<T> definition, Disruptor<ProxyMethodInvocation> disruptor,
+                                       OverflowStrategy overflowStrategy, T... implementations)
+    {
+        InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
+        for (int i = 0; i < implementations.length; i++)
+        {
+            handlers[i] = new InvokerEventHandler<T>(implementations[i], false);
+            disruptor.handleEventsWith(handlers[i]);
+        }
+        disruptor.after(handlers).then(new ResetHandler());
 
         final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
         argumentHolderGenerator.createArgumentHolderClass(definition);
