@@ -47,6 +47,15 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     public <T> T createRingBufferProxy(Class<T> definition, Disruptor<ProxyMethodInvocation> disruptor,
                                        OverflowStrategy overflowStrategy, T... implementations)
     {
+        if (implementations.length < 1)
+        {
+            throw new IllegalArgumentException("Must have at least one implementation");
+        }
+        else if (implementations.length == 1)
+        {
+            return createRingBufferProxy(implementations[0], definition, disruptor, overflowStrategy);
+        }
+
         InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
         for (int i = 0; i < implementations.length; i++)
         {
