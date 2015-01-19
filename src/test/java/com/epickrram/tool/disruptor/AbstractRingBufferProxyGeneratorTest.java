@@ -1,6 +1,8 @@
 package com.epickrram.tool.disruptor;
 
+import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -13,6 +15,7 @@ import static org.junit.Assert.assertThat;
 
 public abstract class AbstractRingBufferProxyGeneratorTest
 {
+    private static final int ITERATIONS = 3;
     private final GeneratorType generatorType;
 
     protected AbstractRingBufferProxyGeneratorTest(final GeneratorType generatorType)
@@ -42,6 +45,12 @@ public abstract class AbstractRingBufferProxyGeneratorTest
             listener.onMixedMultipleArgs(0, 1, "a", "b", 2);
         }
 
+        RingBuffer<ProxyMethodInvocation> ringBuffer = disruptor.getRingBuffer();
+        while (ringBuffer.getMinimumGatingSequence() != ringBuffer.getCursor())
+        {
+            // Spin
+        }
+
         disruptor.shutdown();
         executor.shutdown();
 
@@ -51,6 +60,52 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getVoidInvocationCount(), is(3));
         assertThat(implementation.getMixedArgsInvocationCount(), is(3));
         assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
+    }
+
+    @Test
+    public void shouldProxyMultipleImplementations()
+    {
+        final ExecutorService executor = Executors.newCachedThreadPool();
+        final Disruptor<ProxyMethodInvocation> disruptor =
+                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, executor);
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+
+        final ListenerImpl[] implementations = new ListenerImpl[]
+        {
+            new ListenerImpl(), new ListenerImpl()
+        };
+
+        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementations);
+        disruptor.start();
+
+        for(int i = 0; i < ITERATIONS; i++)
+        {
+            listener.onString("single string " + i);
+            listener.onFloatAndInt((float) i, i);
+            listener.onVoid();
+            listener.onObjectArray(new Double[]{(double) i});
+            listener.onMixedMultipleArgs(0, 1, "a", "b", 2);
+        }
+
+        RingBuffer<ProxyMethodInvocation> ringBuffer = disruptor.getRingBuffer();
+        while (ringBuffer.getMinimumGatingSequence() != ringBuffer.getCursor())
+        {
+            // Spin
+        }
+
+        disruptor.shutdown();
+        executor.shutdown();
+
+        for (ListenerImpl implementation : implementations)
+        {
+            assertThat(implementation.getLastStringValue(), is("single string 2"));
+            assertThat(implementation.getLastFloatValue(), is((float) 2));
+            assertThat(implementation.getLastIntValue(), is(2));
+            assertThat(implementation.getVoidInvocationCount(), is(3));
+            assertThat(implementation.getMixedArgsInvocationCount(), is(3));
+            assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
+        }
     }
 
     @Test
