@@ -16,9 +16,18 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * Specifies the proxy generator
+ */
 public enum GeneratorType
 {
+    /**
+     * Use JDK reflection to create a proxy (creates garbage, has reflection overhead)
+     */
     JDK_REFLECTION("com.epickrram.tool.disruptor.reflect.ReflectiveRingBufferProxyGenerator"),
+    /**
+     * Use a bytecode-generation library to create a proxy (garbage-free, no reflection overhead)
+     */
     BYTECODE_GENERATION("com.epickrram.tool.disruptor.bytecode.GeneratedRingBufferProxyGenerator");
 
     private final String generatorClassname;

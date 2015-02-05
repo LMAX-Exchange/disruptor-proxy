@@ -16,7 +16,15 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * An interface to describe objects that will be called on the end of a Disruptor batch.
+ *
+ * Implement this interface in your implementation object if you wish to be notified of the end of a Disruptor batch.
+ */
 public interface BatchListener
 {
+    /**
+     * Will be called at the end of a Disruptor batch
+     */
     void onEndOfBatch();
 }

@@ -18,6 +18,10 @@ package com.epickrram.tool.disruptor;
 
 import com.lmax.disruptor.EventHandler;
 
+/**
+ * A Disruptor event handler that will invoke an operation on the supplied implementation
+ * @param <T> the type of the implementation object to be invoked
+ */
 public final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInvocation>
 {
     private final T implementation;

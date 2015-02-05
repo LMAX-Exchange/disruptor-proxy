@@ -16,6 +16,9 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * A container for storing the arguments of a method invocation
+ */
 public final class ProxyMethodInvocation
 {
     private Invoker invoker;
@@ -26,7 +29,7 @@ public final class ProxyMethodInvocation
         return invoker;
     }
 
-    public void setInvoker(Invoker invoker)
+    public void setInvoker(final Invoker invoker)
     {
         this.invoker = invoker;
     }

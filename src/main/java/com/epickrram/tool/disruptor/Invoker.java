@@ -16,6 +16,9 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * Interface for a component that can invoke arguments on a target object
+ */
 public interface Invoker
 {
     void invokeWithArgumentHolder(final Object implementation, final Object argumentHolder);

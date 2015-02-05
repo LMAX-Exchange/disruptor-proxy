@@ -16,8 +16,17 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * Specifies the action to take when the ring-buffer is full
+ */
 public enum OverflowStrategy
 {
+    /**
+     * Block the publishing Thread
+     */
     BLOCK,
+    /**
+     * Discard the message and continue
+     */
     DROP
 }
