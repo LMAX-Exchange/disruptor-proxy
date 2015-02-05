@@ -31,7 +31,7 @@ public interface RingBufferProxyGenerator
      * @param disruptor a disruptor instance
      * @param overflowStrategy an indicator of what action should be taken when the ring-buffer is full
      * @param <T> the type of the implementation
-     * @return an implementation of <T>
+     * @return an implementation of type T
      */
     <T> T createRingBufferProxy(final T implementation, final Class<T> definition,
                                 final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy);
@@ -44,7 +44,7 @@ public interface RingBufferProxyGenerator
      * @param overflowStrategy an indicator of what action should be taken when the ring-buffer is full
      * @param implementations the implementation objects to be invoked by the Disruptor event handler (each on its own Thread)
      * @param <T> the type of the implementation
-     * @return an implementation of <T>
+     * @return an implementation of type T
      */
     @SuppressWarnings("varargs")
     <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
