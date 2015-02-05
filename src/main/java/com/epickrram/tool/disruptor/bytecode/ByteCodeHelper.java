@@ -17,7 +17,13 @@ package com.epickrram.tool.disruptor.bytecode;
 //////////////////////////////////////////////////////////////////////////////////
 
 
-import javassist.*;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtField;
+import javassist.CtMethod;
+import javassist.Modifier;
+import javassist.NotFoundException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

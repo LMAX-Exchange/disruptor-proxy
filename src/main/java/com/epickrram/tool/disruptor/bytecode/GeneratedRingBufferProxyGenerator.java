@@ -1,11 +1,22 @@
 package com.epickrram.tool.disruptor.bytecode;
 
-import com.epickrram.tool.disruptor.*;
-import com.lmax.disruptor.IgnoreExceptionHandler;
+import com.epickrram.tool.disruptor.Invoker;
+import com.epickrram.tool.disruptor.InvokerEventHandler;
+import com.epickrram.tool.disruptor.OverflowStrategy;
+import com.epickrram.tool.disruptor.ProxyMethodInvocation;
+import com.epickrram.tool.disruptor.ResetHandler;
+import com.epickrram.tool.disruptor.Resetable;
+import com.epickrram.tool.disruptor.RingBufferProxyGenerator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-
-import javassist.*;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtMethod;
+import javassist.CtNewConstructor;
+import javassist.LoaderClassPath;
+import javassist.NotFoundException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -13,7 +24,12 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.*;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.addInterface;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.createField;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.createMethod;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.getUniqueIdentifier;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makeClass;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makePublicFinal;
 
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
@@ -203,13 +219,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
         methodSrc.append(")\n{\n");
 
-        if (overflowStrategy == OverflowStrategy.DROP)
-        {
-            methodSrc.append("if(!ringBuffer.hasAvailableCapacity(1))\n");
-            methodSrc.append("{");
-            methodSrc.append("return;\n");
-            methodSrc.append("}\n");
-        }
+        handleOverflowStrategy(overflowStrategy, methodSrc);
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
                 append("{\n").
@@ -240,6 +250,17 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         methodSrc.append("}\n");
 
         createMethod(ctClass, methodSrc.toString());
+    }
+
+    private void handleOverflowStrategy(final OverflowStrategy overflowStrategy, final StringBuilder methodSrc)
+    {
+        if (overflowStrategy == OverflowStrategy.DROP)
+        {
+            methodSrc.append("if(!ringBuffer.hasAvailableCapacity(1))\n");
+            methodSrc.append("{");
+            methodSrc.append("return;\n");
+            methodSrc.append("}\n");
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -282,12 +303,11 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append(");\n}\n");
 
-        if (DEBUG)
-        {
-            System.out.println("Created method for " + invokerClassName.toString());
-            System.out.println(methodSrc);
-        }
+        return generateInvoker(ctClass, methodSrc);
+    }
 
+    private Invoker generateInvoker(final CtClass ctClass, final StringBuilder methodSrc)
+    {
         try
         {
             ctClass.addMethod(CtMethod.make(methodSrc.toString(), ctClass));

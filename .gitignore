@@ -9,3 +9,6 @@ build/
 .classpath
 .project
 /bin
+
+./disruptor-proxy.*
+./gradle*

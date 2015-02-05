@@ -31,7 +31,7 @@ public final class ArgumentHolderHelperTest
     @Test
     public void shouldDetermineParameterTypeCounts() throws Exception
     {
-        final Map<Class<?>,Integer> parameterTypeCounts =
+        final Map<Class<?>, Integer> parameterTypeCounts =
                 argumentHolderHelper.getParameterTypeCounts(TestInterface.class);
 
         assertThat(parameterTypeCounts.get(String.class), is(1));

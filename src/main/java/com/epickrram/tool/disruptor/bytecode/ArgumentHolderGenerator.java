@@ -26,7 +26,12 @@ import javassist.CtNewConstructor;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.*;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.addInterface;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.createField;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.createMethod;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.getUniqueIdentifier;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makeClass;
+import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makePublicFinal;
 
 public final class ArgumentHolderGenerator
 {
@@ -35,7 +40,7 @@ public final class ArgumentHolderGenerator
 
     private String generatedClassName;
     private Class<?> generatedClass;
-    private Map<Class<?>,Integer> parameterTypeCounts;
+    private Map<Class<?>, Integer> parameterTypeCounts;
     private Map<Class<?>, Character> parameterFieldSuffix = new HashMap<Class<?>, Character>();
 
     public ArgumentHolderGenerator(final ClassPool classPool)
@@ -147,7 +152,7 @@ public final class ArgumentHolderGenerator
 
     private static String sanitiseParameterName(final String parameterTypeName)
     {
-        return parameterTypeName.replace('[','_').replace(']', '_').replace('.', '_');
+        return parameterTypeName.replace('[', '_').replace(']', '_').replace('.', '_');
     }
 
     private static String sanitiseParameterType(final Class<?> parameterType)

@@ -1,0 +1,72 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'checkstyle'
+
+defaultTasks 'checkstyleTest', 'checkstyleMain', 'build'
+
+group = 'com.lmax'
+version = new Version(major: 1, revision: 6)
+
+ext {
+    fullName = 'Disruptor-Proxy'
+    fullDescription = ''
+    teamName = ''
+    siteUrl = 'http://github.com/LMAX-Exchange'
+    sourceUrl = ''
+
+    javaCompilerExecutable = System.env['JAVA_HOME'] ? System.env['JAVA_HOME'] + '/bin/javac' : 'javac'
+
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile 'junit:junit:4.5', 'org.mockito:mockito-all:1.8.4', 'org.hamcrest:hamcrest-core:1.3'
+    compile 'org.javassist:javassist:3.19.0-GA', 'com.lmax:disruptor:3.3.0'
+}
+
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+jar {
+    manifest.attributes('Built-By': System.properties['user.name'],
+                        'Bundle-Name': fullName,
+                        'Bundle-Vendor': teamName,
+                        'Bundle-Description': fullDescription,
+                        'Bundle-DocURL': siteUrl)
+}
+
+checkstyle {
+    toolVersion = 6.3
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2'
+}
+
+class Version {
+    int major, minor = 0, revision = 0
+    boolean snapshot
+    String stage
+
+    String toString() {
+        "$major.$minor.$revision${stage ? '.' + stage : ''}${snapshot ? '-SNAPSHOT' : ''}"
+    }
+}
