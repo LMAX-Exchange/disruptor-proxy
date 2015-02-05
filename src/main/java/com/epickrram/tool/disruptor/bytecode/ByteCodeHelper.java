@@ -26,7 +26,7 @@ import javassist.NotFoundException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public enum ByteCodeHelper
+enum ByteCodeHelper
 {
     INSTANCE;
 

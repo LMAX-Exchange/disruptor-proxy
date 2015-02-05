@@ -31,8 +31,14 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * {@inheritDoc}
+ */
 public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <T> T createRingBufferProxy(final T implementation, final Class<T> definition,
@@ -52,6 +58,9 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         return (T)Proxy.newProxyInstance(classLoader, new Class<?>[]{definition}, invocationHandler);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <T> T createRingBufferProxy(Class<T> definition, Disruptor<ProxyMethodInvocation> disruptor,

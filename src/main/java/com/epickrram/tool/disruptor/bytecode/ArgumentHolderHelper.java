@@ -23,7 +23,7 @@ import java.util.Map;
 
 import static java.lang.Math.max;
 
-public final class ArgumentHolderHelper
+final class ArgumentHolderHelper
 {
     public Map<Class<?>, Integer> getParameterTypeCounts(final Class<?> type)
     {

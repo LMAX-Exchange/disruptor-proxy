@@ -47,6 +47,9 @@ import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.getUniqueIden
 import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makeClass;
 import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makePublicFinal;
 
+/**
+ * {@inheritDoc}
+ */
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
     private final ClassPool classPool;
@@ -56,6 +59,9 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         classPool = configureClassPool();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <T> T createRingBufferProxy(final T implementation, final Class<T> definition,
@@ -74,6 +80,9 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,

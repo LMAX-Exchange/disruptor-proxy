@@ -18,7 +18,7 @@ package com.epickrram.tool.disruptor.reflect;
 
 import com.epickrram.tool.disruptor.Resetable;
 
-public final class ObjectArrayHolder implements Resetable
+final class ObjectArrayHolder implements Resetable
 {
     private Object[] args;
 

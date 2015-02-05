@@ -33,7 +33,7 @@ import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.getUniqueIden
 import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makeClass;
 import static com.epickrram.tool.disruptor.bytecode.ByteCodeHelper.makePublicFinal;
 
-public final class ArgumentHolderGenerator
+final class ArgumentHolderGenerator
 {
     private final ArgumentHolderHelper helper = new ArgumentHolderHelper();
     private final ClassPool classPool;
