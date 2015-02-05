@@ -18,6 +18,9 @@ package com.epickrram.tool.disruptor;
 
 import com.lmax.disruptor.EventFactory;
 
+/**
+ * A Disruptor EventFactory used to create ring-buffer entries
+ */
 public final class RingBufferProxyEventFactory implements EventFactory<ProxyMethodInvocation>
 {
     public static final EventFactory<ProxyMethodInvocation> FACTORY = new RingBufferProxyEventFactory();

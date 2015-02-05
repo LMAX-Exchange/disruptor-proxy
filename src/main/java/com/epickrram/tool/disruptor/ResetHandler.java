@@ -18,13 +18,14 @@ package com.epickrram.tool.disruptor;
 
 import com.lmax.disruptor.EventHandler;
 
-public class ResetHandler implements EventHandler<ProxyMethodInvocation>
+/**
+ * A Disruptor EventHandler that will reset the ring-buffer entry
+ */
+public final class ResetHandler implements EventHandler<ProxyMethodInvocation>
 {
-
     @Override
-    public void onEvent(ProxyMethodInvocation event, long arg1, boolean arg2) throws Exception
+    public void onEvent(final ProxyMethodInvocation event, final long sequence, final boolean endOfBatch) throws Exception
     {
         event.reset();
     }
-
 }

@@ -16,7 +16,13 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * A generic interface for components that can be reset
+ */
 public interface Resetable
 {
+    /**
+     * Reset this component
+     */
     void reset();
 }

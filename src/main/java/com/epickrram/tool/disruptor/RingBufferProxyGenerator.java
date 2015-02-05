@@ -18,11 +18,34 @@ package com.epickrram.tool.disruptor;
 
 import com.lmax.disruptor.dsl.Disruptor;
 
+/**
+ * Creates an implementation of the specified interface, backed by a Disruptor instance
+ */
 public interface RingBufferProxyGenerator
 {
+    /**
+     * Create a disruptor proxy with a single implementation instance
+     *
+     * @param implementation the implementation object to be invoked by the Disruptor event handler
+     * @param definition the type of the implementation
+     * @param disruptor a disruptor instance
+     * @param overflowStrategy an indicator of what action should be taken when the ring-buffer is full
+     * @param <T> the type of the implementation
+     * @return an implementation of <T>
+     */
     <T> T createRingBufferProxy(final T implementation, final Class<T> definition,
                                 final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy);
 
+    /**
+     * Create a disruptor proxy with multiple implementation instances
+     *
+     * @param definition the type of the implementation
+     * @param disruptor a disruptor instance
+     * @param overflowStrategy an indicator of what action should be taken when the ring-buffer is full
+     * @param implementations the implementation objects to be invoked by the Disruptor event handler (each on its own Thread)
+     * @param <T> the type of the implementation
+     * @return an implementation of <T>
+     */
     @SuppressWarnings("varargs")
     <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
                                 final OverflowStrategy overflowStrategy, final T... implementations);

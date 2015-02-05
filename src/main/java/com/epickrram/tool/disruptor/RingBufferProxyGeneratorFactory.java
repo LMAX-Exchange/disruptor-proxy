@@ -16,8 +16,16 @@
 
 package com.epickrram.tool.disruptor;
 
+/**
+ * A utility class to load a RingBufferProxyGenerator for the supplied type
+ */
 public final class RingBufferProxyGeneratorFactory
 {
+    /**
+     * Creates a RingBufferProxyGenerator
+     * @param generatorType the type of generator
+     * @return the RingBufferProxyGenerator
+     */
     public RingBufferProxyGenerator create(final GeneratorType generatorType)
     {
         try
