@@ -60,8 +60,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T createRingBufferProxy(Class<T> definition, Disruptor<ProxyMethodInvocation> disruptor,
-                                       OverflowStrategy overflowStrategy, T... implementations)
+    public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
+                                       final OverflowStrategy overflowStrategy, final T... implementations)
     {
         if (implementations.length < 1)
         {
