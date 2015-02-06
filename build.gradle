@@ -5,7 +5,7 @@ apply plugin: 'checkstyle'
 defaultTasks 'checkstyleTest', 'checkstyleMain', 'build'
 
 group = 'com.lmax'
-version = new Version(major: 1, minor: 6, revision: 1)
+version = new Version(major: 2, minor: 0, revision: 0)
 
 ext {
     fullName = 'Disruptor-Proxy'
