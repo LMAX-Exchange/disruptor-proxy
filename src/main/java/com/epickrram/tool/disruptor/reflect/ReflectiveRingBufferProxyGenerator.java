@@ -47,8 +47,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition);
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        final RingBufferInvocationHandler<T> invocationHandler =
-                new RingBufferInvocationHandler<T>(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
+        final RingBufferInvocationHandler invocationHandler =
+                new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
 
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
@@ -85,8 +85,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition);
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        final RingBufferInvocationHandler<T> invocationHandler =
-                new RingBufferInvocationHandler<T>(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
+        final RingBufferInvocationHandler invocationHandler =
+                new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
 
         preallocateArgumentHolders(disruptor.getRingBuffer());
 

@@ -25,7 +25,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-final class RingBufferInvocationHandler<T> implements InvocationHandler
+final class RingBufferInvocationHandler implements InvocationHandler
 {
     private final RingBuffer<ProxyMethodInvocation> ringBuffer;
     private final Map<Method, Invoker> methodToInvokerMap;
