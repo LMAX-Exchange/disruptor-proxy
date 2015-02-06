@@ -16,6 +16,7 @@
 
 package com.lmax.tool.disruptor;
 
+import com.lmax.disruptor.FatalExceptionHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.junit.Test;
@@ -40,12 +41,21 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         this.generatorType = generatorType;
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowExceptionIfDisruptorInstanceDoesNotHaveAnExceptionHandler() throws Exception
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor =
+                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+        final ListenerImpl implementation = new ListenerImpl();
+        ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
+    }
+
     @Test
     public void shouldProxy()
     {
-        final ExecutorService executor = Executors.newSingleThreadExecutor();
-        final Disruptor<ProxyMethodInvocation> disruptor =
-                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, executor);
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 1024);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
         final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
 
@@ -69,7 +79,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         }
 
         disruptor.shutdown();
-        executor.shutdown();
+        Executors.newSingleThreadExecutor().shutdown();
 
         assertThat(implementation.getLastStringValue(), is("single string 2"));
         assertThat(implementation.getLastFloatValue(), is((float) 2));
@@ -79,12 +89,17 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
     }
 
+    private Disruptor<ProxyMethodInvocation> createDisruptor(final ExecutorService executor, final int ringBufferSize)
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), ringBufferSize, executor);
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+        return disruptor;
+    }
+
     @Test
     public void shouldProxyMultipleImplementations()
     {
-        final ExecutorService executor = Executors.newCachedThreadPool();
-        final Disruptor<ProxyMethodInvocation> disruptor =
-                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, executor);
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newCachedThreadPool(), 1024);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
         final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
 
@@ -112,7 +127,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         }
 
         disruptor.shutdown();
-        executor.shutdown();
+        Executors.newCachedThreadPool().shutdown();
 
         for (ListenerImpl implementation : implementations)
         {
@@ -128,9 +143,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     @Test
     public void shouldDropMessagesIfRingBufferIsFull() throws Exception
     {
-        final ExecutorService executor = Executors.newSingleThreadExecutor();
-        final Disruptor<ProxyMethodInvocation> disruptor =
-                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 4, executor);
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
         final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
 
@@ -149,7 +162,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         Thread.sleep(250L);
 
         disruptor.shutdown();
-        executor.shutdown();
+        Executors.newSingleThreadExecutor().shutdown();
 
         assertThat(implementation.getInvocationCount(), is(4));
     }
@@ -157,9 +170,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     @Test
     public void shouldNotifyBatchListenerImplementationOfEndOfBatch() throws Exception
     {
-        final ExecutorService executor = Executors.newSingleThreadExecutor();
-        final Disruptor<ProxyMethodInvocation> disruptor =
-                new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 4, executor);
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
         final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
 
@@ -195,7 +206,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         }
 
         disruptor.shutdown();
-        executor.shutdown();
+        Executors.newSingleThreadExecutor().shutdown();
 
         assertThat(implementation.getBatchCount() > firstBatchCount, is(true));
     }

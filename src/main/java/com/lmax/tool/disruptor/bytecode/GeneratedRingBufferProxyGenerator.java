@@ -16,6 +16,8 @@
 
 package com.lmax.tool.disruptor.bytecode;
 
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.OverflowStrategy;
@@ -23,8 +25,6 @@ import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
 import com.lmax.tool.disruptor.Resetable;
 import com.lmax.tool.disruptor.RingBufferProxyGenerator;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -40,6 +40,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.lmax.tool.disruptor.Validation.VALIDATION;
 import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.addInterface;
 import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.createField;
 import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.createMethod;
@@ -66,6 +67,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     @Override
     public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
     {
+        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
         final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
@@ -86,6 +89,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
                                        final OverflowStrategy overflowStrategy, final T... implementations)
     {
+        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+
         if (implementations.length < 1)
         {
             throw new IllegalArgumentException("Must have at least one implementation");

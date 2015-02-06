@@ -33,7 +33,8 @@ public interface RingBufferProxyGenerator
      * @param implementation the implementation object to be invoked by the Disruptor event handler
      * @return an implementation of type T
      */
-    <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation);
+    <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
+                                final OverflowStrategy overflowStrategy, final T implementation);
 
     /**
      * Create a disruptor proxy with multiple implementation instances

@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.lmax.tool.disruptor.Validation.VALIDATION;
 import static java.lang.Thread.currentThread;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
@@ -44,6 +45,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
     @Override
     public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
     {
+        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+
         final RingBufferInvocationHandler invocationHandler = createInvocationHandler(definition, disruptor, overflowStrategy);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
@@ -60,6 +63,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
     public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
                                        final OverflowStrategy overflowStrategy, final T... implementations)
     {
+        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+
         if (implementations.length < 1)
         {
             throw new IllegalArgumentException("Must have at least one implementation");
