@@ -33,14 +33,14 @@ final class ArgumentHolderHelper
         {
             final Map<Class<?>, Integer> methodTypeCounts = new HashMap<Class<?>, Integer>();
             final Class<?>[] parameterTypes = method.getParameterTypes();
-            for (Class<?> parameterType : parameterTypes)
+            for (final Class<?> parameterType : parameterTypes)
             {
                 ensureTypeCountExists(methodTypeCounts, parameterType);
 
                 methodTypeCounts.put(parameterType, methodTypeCounts.get(parameterType) + 1);
             }
 
-            for (Class<?> parameterType : methodTypeCounts.keySet())
+            for (final Class<?> parameterType : methodTypeCounts.keySet())
             {
                 if(parameterTypeCounts.containsKey(parameterType))
                 {
