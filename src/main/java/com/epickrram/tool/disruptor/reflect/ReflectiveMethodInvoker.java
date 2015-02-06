@@ -25,7 +25,7 @@ final class ReflectiveMethodInvoker implements Invoker
 {
     private final Method method;
 
-    public ReflectiveMethodInvoker(Method method)
+    public ReflectiveMethodInvoker(final Method method)
     {
         this.method = method;
     }
