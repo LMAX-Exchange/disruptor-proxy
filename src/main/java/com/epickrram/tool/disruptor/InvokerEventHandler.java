@@ -51,7 +51,7 @@ public final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInv
 
         if (isBatchListener && endOfBatch)
         {
-            BatchListener batchListener = (BatchListener) implementation;
+            final BatchListener batchListener = (BatchListener) implementation;
             batchListener.onEndOfBatch();
         }
     }
