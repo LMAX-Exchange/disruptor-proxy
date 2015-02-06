@@ -64,9 +64,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T createRingBufferProxy(final T implementation, final Class<T> definition,
-                                       final Disruptor<ProxyMethodInvocation> disruptor,
-                                       final OverflowStrategy overflowStrategy)
+    public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
     {
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
@@ -94,7 +92,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
         else if (implementations.length == 1)
         {
-            return createRingBufferProxy(implementations[0], definition, disruptor, overflowStrategy);
+            return createRingBufferProxy(definition, disruptor, overflowStrategy, implementations[0]);
         }
 
         final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];

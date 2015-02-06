@@ -50,7 +50,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
 
         final ListenerImpl implementation = new ListenerImpl();
-        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(implementation, Listener.class, disruptor, OverflowStrategy.DROP);
+        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
         disruptor.start();
 
         for(int i = 0; i < 3; i++)
@@ -136,7 +136,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
 
         final CountDownLatch latch = new CountDownLatch(1);
         final BlockingOverflowTest implementation = new BlockingOverflowTest(latch);
-        final OverflowTest listener = ringBufferProxyGenerator.createRingBufferProxy(implementation, OverflowTest.class, disruptor, OverflowStrategy.DROP);
+        final OverflowTest listener = ringBufferProxyGenerator.createRingBufferProxy(OverflowTest.class, disruptor, OverflowStrategy.DROP, implementation);
         disruptor.start();
 
         for(int i = 0; i < 8; i++)
@@ -164,7 +164,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
 
         final BatchAwareListenerImpl implementation = new BatchAwareListenerImpl();
-        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(implementation, Listener.class, disruptor, OverflowStrategy.DROP);
+        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
         disruptor.start();
 
         listener.onString("foo1");
