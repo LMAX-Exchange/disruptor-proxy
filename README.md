@@ -1,4 +1,4 @@
-disruptor-proxy
+disruptor-proxy       [![Build Status](https://travis-ci.org/LMAX-Exchange/disruptor-proxy.svg)](https://travis-ci.org/LMAX-Exchange/disruptor-proxy)
 ===============
 
 Byte-code generator to create Disruptor-backed proxies
