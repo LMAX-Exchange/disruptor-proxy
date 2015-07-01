@@ -13,12 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.lmax.tool.disruptor;
 
-import com.lmax.disruptor.dsl.Disruptor;
-
-public interface Validation
+public interface ValidationConfig
 {
-    void validateAll(Disruptor<?> disruptor, Class<?> disruptorProxyInterface);
+    boolean validateProxyInterfaces();
+
+    boolean validateExceptionHandler();
 }

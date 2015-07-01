@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 LMAX Ltd.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.lmax.tool.disruptor;
 
 import com.lmax.disruptor.dsl.Disruptor;
@@ -5,15 +20,20 @@ import com.lmax.disruptor.dsl.Disruptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-public class ConfigurableValidator implements Validation
+public class ConfigurableValidator implements RingBufferProxyValidation, ValidationConfig
 {
     private final boolean validateProxyInterfaces;
     private final boolean validateExceptionHandler;
 
-    public ConfigurableValidator(boolean validateProxyInterfaces, boolean validateExceptionHandler)
+    public ConfigurableValidator(final boolean validateProxyInterfaces, final boolean validateExceptionHandler)
     {
         this.validateProxyInterfaces = validateProxyInterfaces;
         this.validateExceptionHandler = validateExceptionHandler;
+    }
+
+    public ConfigurableValidator(final ValidationConfig validationConfig)
+    {
+        this(validationConfig.validateProxyInterfaces(), validationConfig.validateExceptionHandler());
     }
 
     @Override
@@ -64,5 +84,17 @@ public class ConfigurableValidator implements Validation
             }
         }
         throw new IllegalArgumentException("Please supply a disruptor proxy interface that is annotated with " + DisruptorProxy.class);
+    }
+
+    @Override
+    public boolean validateProxyInterfaces()
+    {
+        return validateProxyInterfaces;
+    }
+
+    @Override
+    public boolean validateExceptionHandler()
+    {
+        return validateExceptionHandler;
     }
 }

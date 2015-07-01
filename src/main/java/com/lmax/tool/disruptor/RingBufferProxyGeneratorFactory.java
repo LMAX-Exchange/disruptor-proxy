@@ -28,24 +28,25 @@ public final class RingBufferProxyGeneratorFactory
      * @param generatorType the type of generator
      * @return the RingBufferProxyGenerator
      */
-    public RingBufferProxyGenerator create(final GeneratorType generatorType)
+    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType)
     {
-        final ConfigurableValidator backwardsCompatibleValidator = new ConfigurableValidator(false, true);
-        return create(generatorType, backwardsCompatibleValidator);
+        final ConfigurableValidator validateAsMuchAsPossibleValidator = new ConfigurableValidator(true, true);
+        return newProxy(generatorType, validateAsMuchAsPossibleValidator);
     }
 
     /**
      * Creates a RingBufferProxyGenerator
      * @param generatorType the type of generator
-     * @param validator configure how much validation the ringBufferProxyGenerator should have
+     * @param config configure how much validation the ringBufferProxyGenerator should have
      * @return the RingBufferProxyGenerator
      */
-    public RingBufferProxyGenerator create(final GeneratorType generatorType, final ConfigurableValidator validator)
+    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType, final ValidationConfig config)
     {
         try
         {
             final Class<?> clazz = Class.forName(generatorType.getGeneratorClassName());
-            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(ConfigurableValidator.class);
+            ConfigurableValidator validator = new ConfigurableValidator(config.validateProxyInterfaces(), config.validateExceptionHandler());
+            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(RingBufferProxyValidation.class);
             return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validator);
         }
         catch (Exception e)
@@ -53,5 +54,17 @@ public final class RingBufferProxyGeneratorFactory
             throw new IllegalStateException(String.format("Unable to instantiate generator %s",
                     generatorType.getGeneratorClassName()), e);
         }
+    }
+
+    /**
+     * @deprecated prefer newProxy().
+     *
+     * This method is left to preserve the existing behaviour now configurable in ValidationConfig.
+     */
+    @Deprecated
+    public RingBufferProxyGenerator create(final GeneratorType generatorType)
+    {
+        final ConfigurableValidator backwardsCompatibleValidator = new ConfigurableValidator(false, true);
+        return newProxy(generatorType, backwardsCompatibleValidator);
     }
 }

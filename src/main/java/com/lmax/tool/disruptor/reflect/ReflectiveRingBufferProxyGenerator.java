@@ -18,13 +18,13 @@ package com.lmax.tool.disruptor.reflect;
 
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.tool.disruptor.ConfigurableValidator;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
 import com.lmax.tool.disruptor.RingBufferProxyGenerator;
+import com.lmax.tool.disruptor.RingBufferProxyValidation;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -38,9 +38,9 @@ import static java.lang.reflect.Proxy.newProxyInstance;
  */
 public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
-    private final ConfigurableValidator validator;
+    private final RingBufferProxyValidation validator;
 
-    public ReflectiveRingBufferProxyGenerator(final ConfigurableValidator validator)
+    public ReflectiveRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
         this.validator = validator;
     }

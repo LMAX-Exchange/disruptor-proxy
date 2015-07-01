@@ -18,7 +18,6 @@ package com.lmax.tool.disruptor.bytecode;
 
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.tool.disruptor.ConfigurableValidator;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.OverflowStrategy;
@@ -26,6 +25,7 @@ import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
 import com.lmax.tool.disruptor.Resetable;
 import com.lmax.tool.disruptor.RingBufferProxyGenerator;
+import com.lmax.tool.disruptor.RingBufferProxyValidation;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -54,9 +54,9 @@ import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.makePublicFinal;
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
     private final ClassPool classPool;
-    private final ConfigurableValidator validator;
+    private final RingBufferProxyValidation validator;
 
-    public GeneratedRingBufferProxyGenerator(final ConfigurableValidator validator)
+    public GeneratedRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
         this.validator = validator;
         classPool = configureClassPool();
