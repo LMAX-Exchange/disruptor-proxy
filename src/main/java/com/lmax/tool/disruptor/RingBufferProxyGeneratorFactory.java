@@ -30,23 +30,23 @@ public final class RingBufferProxyGeneratorFactory
      */
     public RingBufferProxyGenerator create(final GeneratorType generatorType)
     {
-        final ValidationConfig backwardsCompatibleValidationConfig = new ValidationConfig(false, true);
-        return create(generatorType, backwardsCompatibleValidationConfig);
+        final ConfigurableValidator backwardsCompatibleValidator = new ConfigurableValidator(false, true);
+        return create(generatorType, backwardsCompatibleValidator);
     }
 
     /**
      * Creates a RingBufferProxyGenerator
      * @param generatorType the type of generator
-     * @param validationConfig configure how much validation the ringBufferProxyGenerator should have
+     * @param validator configure how much validation the ringBufferProxyGenerator should have
      * @return the RingBufferProxyGenerator
      */
-    public RingBufferProxyGenerator create(final GeneratorType generatorType, final ValidationConfig validationConfig)
+    public RingBufferProxyGenerator create(final GeneratorType generatorType, final ConfigurableValidator validator)
     {
         try
         {
             final Class<?> clazz = Class.forName(generatorType.getGeneratorClassName());
-            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(ValidationConfig.class);
-            return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validationConfig);
+            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(ConfigurableValidator.class);
+            return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validator);
         }
         catch (Exception e)
         {

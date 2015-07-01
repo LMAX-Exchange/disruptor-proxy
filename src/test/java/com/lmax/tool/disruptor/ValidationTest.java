@@ -7,13 +7,13 @@ public class ValidationTest
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenInterfaceIsNotAnnotatedWithDisruptorProxy() throws Exception
     {
-        Validation.VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(MyProxyWithoutAnnotation.class);
+        new ConfigurableValidator(true, false).ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(MyProxyWithoutAnnotation.class);
     }
 
     @Test
     public void shouldNotThrowExceptionWhenInterfaceIsAnnotatedWithDisruptorProxy() throws Exception
     {
-        Validation.VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(MyProxyWithAnnotation.class);
+        new ConfigurableValidator(true, false).ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(MyProxyWithAnnotation.class);
     }
 
     private interface MyProxyWithoutAnnotation

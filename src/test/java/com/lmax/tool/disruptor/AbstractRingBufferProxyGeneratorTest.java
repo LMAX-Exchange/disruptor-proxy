@@ -65,7 +65,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     public void shouldValidateRingBufferProxyAnnotationIfConfiguredThatWay() throws Exception
     {
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType, new ValidationConfig(true, false));
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType, new ConfigurableValidator(true, false));
         generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class,
                 createDisruptor(Executors.newSingleThreadExecutor(), 1024), OverflowStrategy.DROP, new StubImplementationForInterface());
     }
@@ -84,7 +84,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     public void shouldNotValidateExceptionHandlerIfConfiguredThatWay() throws Exception
     {
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType, new ValidationConfig(false, false));
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType, new ConfigurableValidator(false, false));
         final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
         generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class, disruptor,
                 OverflowStrategy.DROP, new StubImplementationForInterface());

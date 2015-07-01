@@ -18,44 +18,7 @@ package com.lmax.tool.disruptor;
 
 import com.lmax.disruptor.dsl.Disruptor;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-
-public enum Validation
+public interface Validation
 {
-    VALIDATION;
-
-    public void ensureDisruptorInstanceHasAnExceptionHandler(final Disruptor<?> disruptor)
-    {
-        try
-        {
-            final Field field = Disruptor.class.getDeclaredField("exceptionHandler");
-            field.setAccessible(true);
-            if(field.get(disruptor) == null)
-            {
-                throw new IllegalStateException("Please supply an ExceptionHandler to the Disruptor instance. " +
-                        "The default Disruptor behaviour is to stop processing when an exception occurs.");
-            }
-        }
-        catch (NoSuchFieldException e)
-        {
-            throw new RuntimeException("Unable to inspect Disruptor instance", e);
-        }
-        catch (IllegalAccessException e)
-        {
-            throw new RuntimeException("Unable to inspect Disruptor instance", e);
-        }
-    }
-
-    public void ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(final Class<?> disruptorProxyInterface)
-    {
-        for (Annotation annotation : disruptorProxyInterface.getAnnotations())
-        {
-            if (annotation instanceof DisruptorProxy)
-            {
-                return;
-            }
-        }
-        throw new IllegalArgumentException("Please supply a disruptor proxy interface that is annotated with " + DisruptorProxy.class);
-    }
+    void validateAll(Disruptor<?> disruptor, Class<?> disruptorProxyInterface);
 }

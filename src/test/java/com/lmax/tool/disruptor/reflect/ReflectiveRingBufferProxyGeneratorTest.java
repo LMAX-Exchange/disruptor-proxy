@@ -18,7 +18,6 @@ package com.lmax.tool.disruptor.reflect;
 
 import com.lmax.tool.disruptor.AbstractRingBufferProxyGeneratorTest;
 import com.lmax.tool.disruptor.GeneratorType;
-import org.junit.Test;
 
 public final class ReflectiveRingBufferProxyGeneratorTest extends AbstractRingBufferProxyGeneratorTest
 {
