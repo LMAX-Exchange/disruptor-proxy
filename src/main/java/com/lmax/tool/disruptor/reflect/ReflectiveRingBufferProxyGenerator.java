@@ -46,6 +46,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
     public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
     {
         VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+        VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(proxyInterface);
 
         final RingBufferInvocationHandler invocationHandler = createInvocationHandler(proxyInterface, disruptor, overflowStrategy);
         preallocateArgumentHolders(disruptor.getRingBuffer());
@@ -64,6 +65,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
                                        final OverflowStrategy overflowStrategy, final T... implementations)
     {
         VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+        VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(proxyInterface);
 
         if (implementations.length < 1)
         {

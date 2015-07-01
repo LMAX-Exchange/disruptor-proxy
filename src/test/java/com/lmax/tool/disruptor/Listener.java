@@ -16,6 +16,7 @@
 
 package com.lmax.tool.disruptor;
 
+@DisruptorProxy
 public interface Listener
 {
     void onString(final String value);

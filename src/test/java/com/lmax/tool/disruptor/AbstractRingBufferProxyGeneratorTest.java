@@ -241,6 +241,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         }
     }
 
+    @DisruptorProxy
     public interface OverflowTest
     {
         void invoke();

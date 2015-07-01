@@ -18,6 +18,7 @@ package com.lmax.tool.disruptor;
 
 import com.lmax.disruptor.dsl.Disruptor;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 public enum Validation
@@ -44,5 +45,17 @@ public enum Validation
         {
             throw new RuntimeException("Unable to inspect Disruptor instance", e);
         }
+    }
+
+    public void ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(final Class<?> disruptorProxyInterface)
+    {
+        for (Annotation annotation : disruptorProxyInterface.getAnnotations())
+        {
+            if (annotation instanceof DisruptorProxy)
+            {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Please supply a disruptor proxy interface that is annotated with " + DisruptorProxy.class);
     }
 }
