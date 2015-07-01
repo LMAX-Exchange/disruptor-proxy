@@ -65,20 +65,20 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
+    public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
     {
         VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
 
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
         final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
-        argumentHolderGenerator.createArgumentHolderClass(definition);
+        argumentHolderGenerator.createArgumentHolderClass(proxyInterface);
 
         prefillArgumentHolderObjects(disruptor.getRingBuffer(), argumentHolderGenerator);
 
-        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition, argumentHolderGenerator);
+        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface, argumentHolderGenerator);
 
-        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
+        return generateProxy(proxyInterface, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
     }
 
     /**
@@ -86,7 +86,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
+    public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor,
                                        final OverflowStrategy overflowStrategy, final T... implementations)
     {
         VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
@@ -97,7 +97,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
         else if (implementations.length == 1)
         {
-            return createRingBufferProxy(definition, disruptor, overflowStrategy, implementations[0]);
+            return createRingBufferProxy(proxyInterface, disruptor, overflowStrategy, implementations[0]);
         }
 
         final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
@@ -109,13 +109,13 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         disruptor.after(handlers).then(new ResetHandler());
 
         final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
-        argumentHolderGenerator.createArgumentHolderClass(definition);
+        argumentHolderGenerator.createArgumentHolderClass(proxyInterface);
 
         prefillArgumentHolderObjects(disruptor.getRingBuffer(), argumentHolderGenerator);
 
-        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition, argumentHolderGenerator);
+        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface, argumentHolderGenerator);
 
-        return generateProxy(definition, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
+        return generateProxy(proxyInterface, disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, argumentHolderGenerator);
     }
 
     private void prefillArgumentHolderObjects(final RingBuffer<ProxyMethodInvocation> ringBuffer,
@@ -128,20 +128,20 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
     }
 
-    private <T> T generateProxy(final Class<T> definition, final RingBuffer<ProxyMethodInvocation> ringBuffer,
+    private <T> T generateProxy(final Class<T> proxyInterface, final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy,
                                 final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        final CtClass ctClass = makeClass(classPool, "_proxy" + definition.getSimpleName() + '_' +
+        final CtClass ctClass = makeClass(classPool, "_proxy" + proxyInterface.getSimpleName() + '_' +
                 getUniqueIdentifier());
 
-        addInterface(ctClass, definition, classPool);
+        addInterface(ctClass, proxyInterface, classPool);
         makePublicFinal(ctClass);
 
         createFields(methodToInvokerMap, ctClass);
         createConstructor(ctClass);
 
-        for (final Method method : definition.getDeclaredMethods())
+        for (final Method method : proxyInterface.getDeclaredMethods())
         {
             createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy, argumentHolderGenerator);
         }
@@ -292,9 +292,9 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Invoker generateInvoker(final Class<T> definition, final Method method, final ArgumentHolderGenerator argumentHolderGenerator)
+    private <T> Invoker generateInvoker(final Class<T> proxyInterface, final Method method, final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        final StringBuilder invokerClassName = new StringBuilder("_invoker").append(definition.getSimpleName()).
+        final StringBuilder invokerClassName = new StringBuilder("_invoker").append(proxyInterface.getSimpleName()).
                 append(method.getName()).append('_').append(getUniqueIdentifier());
 
         final Class<?>[] parameterTypes = method.getParameterTypes();
@@ -323,7 +323,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
                     append("(").append(argumentHolderGenerator.getGeneratedClassName()).append(") argumentHolder;\n");
         }
 
-        methodSrc.append("((").append(definition.getName().replace('$', '.')).
+        methodSrc.append("((").append(proxyInterface.getName().replace('$', '.')).
                 append(")implementation).").append(method.getName()).append('(');
 
 
@@ -357,16 +357,16 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
     }
 
-    private <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> definition,
+    private <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> proxyInterface,
                                                               final ArgumentHolderGenerator argumentHolderGenerator)
     {
         final Map<Method, Invoker> methodToInvokerMap = new HashMap<Method, Invoker>();
 
-        final Method[] declaredMethods = definition.getDeclaredMethods();
+        final Method[] declaredMethods = proxyInterface.getDeclaredMethods();
 
         for (Method declaredMethod : declaredMethods)
         {
-            methodToInvokerMap.put(declaredMethod, generateInvoker(definition, declaredMethod, argumentHolderGenerator));
+            methodToInvokerMap.put(declaredMethod, generateInvoker(proxyInterface, declaredMethod, argumentHolderGenerator));
         }
 
         return methodToInvokerMap;

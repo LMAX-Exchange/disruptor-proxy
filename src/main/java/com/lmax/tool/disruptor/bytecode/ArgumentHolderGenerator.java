@@ -48,11 +48,11 @@ final class ArgumentHolderGenerator
         this.classPool = classPool;
     }
 
-    public void createArgumentHolderClass(final Class<?> type)
+    public void createArgumentHolderClass(final Class<?> proxyInterface)
     {
-        final CtClass ctClass = makeClass(classPool, "_argumentHolder_" + type.getSimpleName() + "_" + getUniqueIdentifier());
+        final CtClass ctClass = makeClass(classPool, "_argumentHolder_" + proxyInterface.getSimpleName() + "_" + getUniqueIdentifier());
 
-        parameterTypeCounts = helper.getParameterTypeCounts(type);
+        parameterTypeCounts = helper.getParameterTypeCounts(proxyInterface);
         createFields(ctClass);
         createMethod(ctClass, generateResetMethod());
         addInterface(ctClass, Resetable.class, classPool);
