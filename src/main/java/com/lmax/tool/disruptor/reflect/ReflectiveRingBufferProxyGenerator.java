@@ -16,20 +16,20 @@
 
 package com.lmax.tool.disruptor.reflect;
 
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
 import com.lmax.tool.disruptor.RingBufferProxyGenerator;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.tool.disruptor.RingBufferProxyValidation;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.lmax.tool.disruptor.Validation.VALIDATION;
 import static java.lang.Thread.currentThread;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
@@ -38,21 +38,11 @@ import static java.lang.reflect.Proxy.newProxyInstance;
  */
 public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
+    private final RingBufferProxyValidation validator;
+
+    public ReflectiveRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
-        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
-
-        final RingBufferInvocationHandler invocationHandler = createInvocationHandler(definition, disruptor, overflowStrategy);
-        preallocateArgumentHolders(disruptor.getRingBuffer());
-
-        disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
-
-        return generateProxy(definition, invocationHandler);
+        this.validator = validator;
     }
 
     /**
@@ -60,10 +50,27 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T createRingBufferProxy(final Class<T> definition, final Disruptor<ProxyMethodInvocation> disruptor,
+    public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
+    {
+        validator.validateAll(disruptor, proxyInterface);
+
+        final RingBufferInvocationHandler invocationHandler = createInvocationHandler(proxyInterface, disruptor, overflowStrategy);
+        preallocateArgumentHolders(disruptor.getRingBuffer());
+
+        disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
+
+        return generateProxy(proxyInterface, invocationHandler);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor,
                                        final OverflowStrategy overflowStrategy, final T... implementations)
     {
-        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+        validator.validateAll(disruptor, proxyInterface);
 
         if (implementations.length < 1)
         {
@@ -71,10 +78,10 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         }
         else if (implementations.length == 1)
         {
-            return createRingBufferProxy(definition, disruptor, overflowStrategy, implementations[0]);
+            return createRingBufferProxy(proxyInterface, disruptor, overflowStrategy, implementations[0]);
         }
 
-        final RingBufferInvocationHandler invocationHandler = createInvocationHandler(definition, disruptor, overflowStrategy);
+        final RingBufferInvocationHandler invocationHandler = createInvocationHandler(proxyInterface, disruptor, overflowStrategy);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
         final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
@@ -85,21 +92,21 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         }
         disruptor.after(handlers).then(new ResetHandler());
 
-        return generateProxy(definition, invocationHandler);
+        return generateProxy(proxyInterface, invocationHandler);
     }
 
-    private static <T> RingBufferInvocationHandler createInvocationHandler(final Class<T> definition,
+    private static <T> RingBufferInvocationHandler createInvocationHandler(final Class<T> proxyInterface,
                                                                            final Disruptor<ProxyMethodInvocation> disruptor,
                                                                            final OverflowStrategy overflowStrategy)
     {
-        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(definition);
+        final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface);
         return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T generateProxy(final Class<T> definition, final RingBufferInvocationHandler invocationHandler)
+    private static <T> T generateProxy(final Class<T> proxyInterface, final RingBufferInvocationHandler invocationHandler)
     {
-        return (T) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[]{definition}, invocationHandler);
+        return (T) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[]{proxyInterface}, invocationHandler);
     }
 
     private static void preallocateArgumentHolders(final RingBuffer<ProxyMethodInvocation> ringBuffer)
@@ -111,10 +118,10 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         }
     }
 
-    private static <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> definition)
+    private static <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> proxyInterface)
     {
         final Map<Method, Invoker> methodToInvokerMap = new ConcurrentHashMap<Method, Invoker>();
-        final Method[] declaredMethods = definition.getDeclaredMethods();
+        final Method[] declaredMethods = proxyInterface.getDeclaredMethods();
 
         for (final Method declaredMethod : declaredMethods)
         {

@@ -13,15 +13,19 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.lmax.tool.disruptor;
 
-@DisruptorProxy
-public interface Listener
+import org.junit.Test;
+
+public class RingBufferProxyGeneratorFactoryTest
 {
-    void onString(final String value);
-    void onFloatAndInt(final Float value, final int intValue);
-    void onVoid();
-    void onObjectArray(final Double[] value);
-    void onMixedMultipleArgs(final int int0, final int int1, final String s0, final String s1, final int i2);
+    @Test
+    public void shouldBeAbleToCreateRingBufferProxyGenerator() throws Exception
+    {
+        for (GeneratorType generatorType : GeneratorType.values())
+        {
+            new RingBufferProxyGeneratorFactory().newProxy(generatorType);
+        }
+        // no exception is thrown
+    }
 }

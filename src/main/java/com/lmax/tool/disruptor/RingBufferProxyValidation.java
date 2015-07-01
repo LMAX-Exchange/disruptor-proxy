@@ -16,12 +16,9 @@
 
 package com.lmax.tool.disruptor;
 
-@DisruptorProxy
-public interface Listener
+import com.lmax.disruptor.dsl.Disruptor;
+
+public interface RingBufferProxyValidation
 {
-    void onString(final String value);
-    void onFloatAndInt(final Float value, final int intValue);
-    void onVoid();
-    void onObjectArray(final Double[] value);
-    void onMixedMultipleArgs(final int int0, final int int1, final String s0, final String s1, final int i2);
+    void validateAll(Disruptor<?> disruptor, Class<?> disruptorProxyInterface);
 }

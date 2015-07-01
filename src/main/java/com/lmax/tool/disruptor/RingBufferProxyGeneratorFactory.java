@@ -16,6 +16,8 @@
 
 package com.lmax.tool.disruptor;
 
+import java.lang.reflect.Constructor;
+
 /**
  * A utility class to load a RingBufferProxyGenerator for the supplied type
  */
@@ -26,16 +28,43 @@ public final class RingBufferProxyGeneratorFactory
      * @param generatorType the type of generator
      * @return the RingBufferProxyGenerator
      */
-    public RingBufferProxyGenerator create(final GeneratorType generatorType)
+    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType)
+    {
+        final ConfigurableValidator validateAsMuchAsPossibleValidator = new ConfigurableValidator(true, true);
+        return newProxy(generatorType, validateAsMuchAsPossibleValidator);
+    }
+
+    /**
+     * Creates a RingBufferProxyGenerator
+     * @param generatorType the type of generator
+     * @param config configure how much validation the ringBufferProxyGenerator should have
+     * @return the RingBufferProxyGenerator
+     */
+    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType, final ValidationConfig config)
     {
         try
         {
-            return (RingBufferProxyGenerator) Class.forName(generatorType.getGeneratorClassName()).newInstance();
+            final Class<?> clazz = Class.forName(generatorType.getGeneratorClassName());
+            ConfigurableValidator validator = new ConfigurableValidator(config.validateProxyInterfaces(), config.validateExceptionHandler());
+            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(RingBufferProxyValidation.class);
+            return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validator);
         }
         catch (Exception e)
         {
             throw new IllegalStateException(String.format("Unable to instantiate generator %s",
                     generatorType.getGeneratorClassName()), e);
         }
+    }
+
+    /**
+     * @deprecated prefer newProxy().
+     *
+     * This method is left to preserve the existing behaviour now configurable in ValidationConfig.
+     */
+    @Deprecated
+    public RingBufferProxyGenerator create(final GeneratorType generatorType)
+    {
+        final ConfigurableValidator backwardsCompatibleValidator = new ConfigurableValidator(false, true);
+        return newProxy(generatorType, backwardsCompatibleValidator);
     }
 }

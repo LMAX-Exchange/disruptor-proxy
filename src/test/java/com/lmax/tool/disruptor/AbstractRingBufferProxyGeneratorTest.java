@@ -47,9 +47,49 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         final Disruptor<ProxyMethodInvocation> disruptor =
                 new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType);
         final ListenerImpl implementation = new ListenerImpl();
         ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void shouldNotValidateRingBufferProxyAnnotationByDefaultToPreserveBackwardsCompatibility() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType);
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class,
+                createDisruptor(Executors.newSingleThreadExecutor(), 1024), OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldValidateRingBufferProxyAnnotationIfConfiguredThatWay() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.newProxy(generatorType, new ConfigurableValidator(true, false));
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class,
+                createDisruptor(Executors.newSingleThreadExecutor(), 1024), OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test(expected = IllegalStateException.class)
+    public void shouldValidateExceptionHandlerByDefaultToPreserveBackwardsCompatibility() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType);
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class, disruptor,
+                OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @Test
+    public void shouldNotValidateExceptionHandlerIfConfiguredThatWay() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.newProxy(generatorType, new ConfigurableValidator(false, false));
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class, disruptor,
+                OverflowStrategy.DROP, new StubImplementationForInterface());
     }
 
     @Test
@@ -57,7 +97,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 1024);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType);
 
         final ListenerImpl implementation = new ListenerImpl();
         final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
@@ -89,19 +129,12 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
     }
 
-    private Disruptor<ProxyMethodInvocation> createDisruptor(final ExecutorService executor, final int ringBufferSize)
-    {
-        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), ringBufferSize, executor);
-        disruptor.handleExceptionsWith(new FatalExceptionHandler());
-        return disruptor;
-    }
-
     @Test
     public void shouldProxyMultipleImplementations()
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newCachedThreadPool(), 1024);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType);
 
         final ListenerImpl[] implementations = new ListenerImpl[]
         {
@@ -145,7 +178,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType);
 
         final CountDownLatch latch = new CountDownLatch(1);
         final BlockingOverflowTest implementation = new BlockingOverflowTest(latch);
@@ -172,7 +205,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.create(generatorType);
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType);
 
         final BatchAwareListenerImpl implementation = new BatchAwareListenerImpl();
         final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
@@ -241,8 +274,24 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         }
     }
 
+    @DisruptorProxy
     public interface OverflowTest
     {
         void invoke();
+    }
+
+    public interface MyDisruptorProxyWithoutTheDisruptorAnnotation
+    {
+    }
+
+    private Disruptor<ProxyMethodInvocation> createDisruptor(final ExecutorService executor, final int ringBufferSize)
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), ringBufferSize, executor);
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+        return disruptor;
+    }
+
+    private static class StubImplementationForInterface implements MyDisruptorProxyWithoutTheDisruptorAnnotation
+    {
     }
 }

@@ -13,15 +13,15 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.lmax.tool.disruptor;
 
-@DisruptorProxy
-public interface Listener
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface DisruptorProxy
 {
-    void onString(final String value);
-    void onFloatAndInt(final Float value, final int intValue);
-    void onVoid();
-    void onObjectArray(final Double[] value);
-    void onMixedMultipleArgs(final int int0, final int int1, final String s0, final String s1, final int i2);
 }
