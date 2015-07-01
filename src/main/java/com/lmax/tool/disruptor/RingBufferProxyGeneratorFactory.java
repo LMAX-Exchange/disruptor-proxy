@@ -16,6 +16,8 @@
 
 package com.lmax.tool.disruptor;
 
+import java.lang.reflect.Constructor;
+
 /**
  * A utility class to load a RingBufferProxyGenerator for the supplied type
  */
@@ -28,9 +30,23 @@ public final class RingBufferProxyGeneratorFactory
      */
     public RingBufferProxyGenerator create(final GeneratorType generatorType)
     {
+        final ValidationConfig backwardsCompatibleValidationConfig = new ValidationConfig(false, true);
+        return create(generatorType, backwardsCompatibleValidationConfig);
+    }
+
+    /**
+     * Creates a RingBufferProxyGenerator
+     * @param generatorType the type of generator
+     * @param validationConfig configure how much validation the ringBufferProxyGenerator should have
+     * @return the RingBufferProxyGenerator
+     */
+    public RingBufferProxyGenerator create(final GeneratorType generatorType, final ValidationConfig validationConfig)
+    {
         try
         {
-            return (RingBufferProxyGenerator) Class.forName(generatorType.getGeneratorClassName()).newInstance();
+            final Class<?> clazz = Class.forName(generatorType.getGeneratorClassName());
+            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(ValidationConfig.class);
+            return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validationConfig);
         }
         catch (Exception e)
         {

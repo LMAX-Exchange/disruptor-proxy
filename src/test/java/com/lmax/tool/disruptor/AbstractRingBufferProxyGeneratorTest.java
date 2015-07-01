@@ -53,6 +53,44 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     }
 
     @Test
+    public void shouldNotValidateRingBufferProxyAnnotationByDefaultToPreserveBackwardsCompatibility() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType);
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class,
+                createDisruptor(Executors.newSingleThreadExecutor(), 1024), OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldValidateRingBufferProxyAnnotationIfConfiguredThatWay() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType, new ValidationConfig(true, false));
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class,
+                createDisruptor(Executors.newSingleThreadExecutor(), 1024), OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldValidateExceptionHandlerByDefaultToPreserveBackwardsCompatibility() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType);
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class, disruptor,
+                OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @Test
+    public void shouldNotValidateExceptionHandlerIfConfiguredThatWay() throws Exception
+    {
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator generator = generatorFactory.create(generatorType, new ValidationConfig(false, false));
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), 1024, Executors.newSingleThreadExecutor());
+        generator.createRingBufferProxy(MyDisruptorProxyWithoutTheDisruptorAnnotation.class, disruptor,
+                OverflowStrategy.DROP, new StubImplementationForInterface());
+    }
+
+    @Test
     public void shouldProxy()
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 1024);
@@ -87,13 +125,6 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getVoidInvocationCount(), is(3));
         assertThat(implementation.getMixedArgsInvocationCount(), is(3));
         assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
-    }
-
-    private Disruptor<ProxyMethodInvocation> createDisruptor(final ExecutorService executor, final int ringBufferSize)
-    {
-        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), ringBufferSize, executor);
-        disruptor.handleExceptionsWith(new FatalExceptionHandler());
-        return disruptor;
     }
 
     @Test
@@ -245,5 +276,20 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     public interface OverflowTest
     {
         void invoke();
+    }
+
+    public interface MyDisruptorProxyWithoutTheDisruptorAnnotation
+    {
+    }
+
+    private Disruptor<ProxyMethodInvocation> createDisruptor(final ExecutorService executor, final int ringBufferSize)
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor = new Disruptor<ProxyMethodInvocation>(new RingBufferProxyEventFactory(), ringBufferSize, executor);
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+        return disruptor;
+    }
+
+    private static class StubImplementationForInterface implements MyDisruptorProxyWithoutTheDisruptorAnnotation
+    {
     }
 }

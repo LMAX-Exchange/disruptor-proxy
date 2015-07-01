@@ -18,13 +18,7 @@ package com.lmax.tool.disruptor.bytecode;
 
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.tool.disruptor.Invoker;
-import com.lmax.tool.disruptor.InvokerEventHandler;
-import com.lmax.tool.disruptor.OverflowStrategy;
-import com.lmax.tool.disruptor.ProxyMethodInvocation;
-import com.lmax.tool.disruptor.ResetHandler;
-import com.lmax.tool.disruptor.Resetable;
-import com.lmax.tool.disruptor.RingBufferProxyGenerator;
+import com.lmax.tool.disruptor.*;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -54,9 +48,11 @@ import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.makePublicFinal;
 public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
     private final ClassPool classPool;
+    private final ValidationConfig validationConfig;
 
-    public GeneratedRingBufferProxyGenerator()
+    public GeneratedRingBufferProxyGenerator(final ValidationConfig validationConfig)
     {
+        this.validationConfig = validationConfig;
         classPool = configureClassPool();
     }
 
@@ -67,8 +63,14 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     @Override
     public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
     {
-        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
-        VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(proxyInterface);
+        if (validationConfig.validateExceptionHandler())
+        {
+            VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+        }
+        if (validationConfig.validateProxyInterfaces())
+        {
+            VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(proxyInterface);
+        }
 
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
 
@@ -90,8 +92,14 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor,
                                        final OverflowStrategy overflowStrategy, final T... implementations)
     {
-        VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
-        VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(proxyInterface);
+        if (validationConfig.validateExceptionHandler())
+        {
+            VALIDATION.ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
+        }
+        if (validationConfig.validateProxyInterfaces())
+        {
+            VALIDATION.ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(proxyInterface);
+        }
 
         if (implementations.length < 1)
         {
