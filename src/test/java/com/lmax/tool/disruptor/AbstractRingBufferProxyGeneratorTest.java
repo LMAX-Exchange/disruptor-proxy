@@ -92,6 +92,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
                 OverflowStrategy.DROP, new StubImplementationForInterface());
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     @Test
     public void shouldProxy()
     {
@@ -129,6 +130,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getLastDoubleArray(), is(equalTo(new Double[] {(double) 2})));
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     @Test
     public void shouldProxyMultipleImplementations()
     {
