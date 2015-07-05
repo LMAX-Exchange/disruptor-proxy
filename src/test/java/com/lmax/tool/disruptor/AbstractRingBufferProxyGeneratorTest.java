@@ -16,6 +16,7 @@
 
 package com.lmax.tool.disruptor;
 
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.FatalExceptionHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -24,12 +25,15 @@ import org.junit.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractRingBufferProxyGeneratorTest
 {
@@ -246,6 +250,50 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         assertThat(implementation.getBatchCount() > firstBatchCount, is(true));
     }
 
+    @Test
+    public void shouldAllowProxyToInheritMethodsFromOtherInterfaces() throws Exception
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(new ScheduledThreadPoolExecutor(1), 1024);
+        disruptor.handleExceptionsWith(new ThrowExceptionHandler());
+
+        final CountDownLatch bothMethodsAreCalled = new CountDownLatch(2);
+        final ProxyWhichExtendsAnotherInterface catDog = new RingBufferProxyGeneratorFactory()
+                .newProxy(generatorType)
+                .createRingBufferProxy(ProxyWhichExtendsAnotherInterface.class,
+                        disruptor,
+                        OverflowStrategy.DROP, new ProxyWhichExtendsAnotherInterface()
+                        {
+                            @Override
+                            public void meow(String meow, int age)
+                            {
+                                bothMethodsAreCalled.countDown();
+                            }
+
+                            @Override
+                            public void interitedMethodBark(boolean bark)
+                            {
+                                bothMethodsAreCalled.countDown();
+                            }
+                        });
+        disruptor.start();
+
+        catDog.meow("meow", 3);
+        catDog.interitedMethodBark(true);
+
+        assertTrue(bothMethodsAreCalled.await(2, TimeUnit.SECONDS));
+    }
+
+    public interface AnotherInterface
+    {
+        void interitedMethodBark(boolean bark);
+    }
+
+    @DisruptorProxy
+    public interface ProxyWhichExtendsAnotherInterface extends AnotherInterface
+    {
+        void meow(String meow, int age);
+    }
+
     private static final class BlockingOverflowTest implements OverflowTest
     {
         private final CountDownLatch blocker;
@@ -295,5 +343,26 @@ public abstract class AbstractRingBufferProxyGeneratorTest
 
     private static class StubImplementationForInterface implements MyDisruptorProxyWithoutTheDisruptorAnnotation
     {
+    }
+
+    private static class ThrowExceptionHandler implements ExceptionHandler
+    {
+        @Override
+        public void handleEventException(Throwable ex, long sequence, Object event)
+        {
+            throw new RuntimeException("fail " + ex.getMessage());
+        }
+
+        @Override
+        public void handleOnStartException(Throwable ex)
+        {
+            throw new RuntimeException("fail " + ex.getMessage());
+        }
+
+        @Override
+        public void handleOnShutdownException(Throwable ex)
+        {
+            throw new RuntimeException("fail " + ex.getMessage());
+        }
     }
 }
