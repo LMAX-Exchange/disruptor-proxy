@@ -143,7 +143,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         createFields(methodToInvokerMap, ctClass);
         createConstructor(ctClass);
 
-        for (final Method method : proxyInterface.getDeclaredMethods())
+        for (final Method method : proxyInterface.getMethods())
         {
             createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy, argumentHolderGenerator);
         }
@@ -364,7 +364,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         final Map<Method, Invoker> methodToInvokerMap = new HashMap<Method, Invoker>();
 
-        final Method[] declaredMethods = proxyInterface.getDeclaredMethods();
+        final Method[] declaredMethods = proxyInterface.getMethods();
 
         for (Method declaredMethod : declaredMethods)
         {

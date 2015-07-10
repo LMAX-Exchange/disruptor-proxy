@@ -121,7 +121,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
     private static <T> Map<Method, Invoker> createMethodToInvokerMap(final Class<T> proxyInterface)
     {
         final Map<Method, Invoker> methodToInvokerMap = new ConcurrentHashMap<Method, Invoker>();
-        final Method[] declaredMethods = proxyInterface.getDeclaredMethods();
+        final Method[] declaredMethods = proxyInterface.getMethods();
 
         for (final Method declaredMethod : declaredMethods)
         {

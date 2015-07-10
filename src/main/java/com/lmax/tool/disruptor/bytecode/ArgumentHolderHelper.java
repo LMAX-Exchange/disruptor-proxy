@@ -27,7 +27,7 @@ final class ArgumentHolderHelper
 {
     public Map<Class<?>, Integer> getParameterTypeCounts(final Class<?> type)
     {
-        final Method[] methods = type.getDeclaredMethods();
+        final Method[] methods = type.getMethods();
         final Map<Class<?>, Integer> parameterTypeCounts = new HashMap<Class<?>, Integer>();
         for (Method method : methods)
         {
