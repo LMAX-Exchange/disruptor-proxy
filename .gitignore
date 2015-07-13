@@ -1,14 +1,9 @@
 *.class
 build/
-
-# Package Files #
-*.jar
-*.war
-*.ear
+out/
 
 .classpath
 .project
 /bin
 
 ./disruptor-proxy.*
-./gradle*

@@ -39,8 +39,17 @@ public class ConfigurableValidator implements RingBufferProxyValidation, Validat
     @Override
     public void validateAll(final Disruptor<?> disruptor, final Class<?> disruptorProxyInterface)
     {
+        ensureThatProxyInterfaceIsAnInterface(disruptorProxyInterface);
         ensureDisruptorInstanceHasAnExceptionHandler(disruptor);
         ensureDisruptorProxyIsAnnotatedWithDisruptorProxyAnnotation(disruptorProxyInterface);
+    }
+
+    private void ensureThatProxyInterfaceIsAnInterface(final Class<?> disruptorProxyInterface)
+    {
+        if(!disruptorProxyInterface.isInterface())
+        {
+            throw new IllegalArgumentException("Not an interface: " + disruptorProxyInterface);
+        }
     }
 
     private void ensureDisruptorInstanceHasAnExceptionHandler(final Disruptor<?> disruptor)

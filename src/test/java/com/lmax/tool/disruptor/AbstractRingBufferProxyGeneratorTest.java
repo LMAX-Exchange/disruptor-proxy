@@ -45,6 +45,21 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         this.generatorType = generatorType;
     }
 
+    public static final class ConcreteClass
+    {
+
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldBlowUpIfSuppliedClassIsNotAnInterface() throws Exception
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor =
+                createDisruptor(Executors.newSingleThreadExecutor(), 1024);
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType, new ConfigurableValidator(false, true));
+        ringBufferProxyGenerator.createRingBufferProxy(ConcreteClass.class, disruptor, OverflowStrategy.DROP, new ConcreteClass());
+    }
+
     @Test(expected = IllegalStateException.class)
     public void shouldThrowExceptionIfDisruptorInstanceDoesNotHaveAnExceptionHandler() throws Exception
     {
