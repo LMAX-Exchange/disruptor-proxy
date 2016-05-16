@@ -18,6 +18,7 @@ package com.lmax.tool.disruptor.reflect;
 
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.OverflowStrategy;
@@ -39,10 +40,18 @@ import static java.lang.reflect.Proxy.newProxyInstance;
 public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxyGenerator
 {
     private final RingBufferProxyValidation validator;
+    private final DropListener dropListener;
 
     public ReflectiveRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
+        this(validator, NoOpDropListener.INSTANCE);
+    }
+
+    public ReflectiveRingBufferProxyGenerator(final RingBufferProxyValidation validator,
+                                              final DropListener dropListener)
+    {
         this.validator = validator;
+        this.dropListener = dropListener;
     }
 
     /**
@@ -50,11 +59,13 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor, final OverflowStrategy overflowStrategy, final T implementation)
+    public <T> T createRingBufferProxy(final Class<T> proxyInterface, final Disruptor<ProxyMethodInvocation> disruptor,
+                                       final OverflowStrategy overflowStrategy, final T implementation)
     {
         validator.validateAll(disruptor, proxyInterface);
 
-        final RingBufferInvocationHandler invocationHandler = createInvocationHandler(proxyInterface, disruptor, overflowStrategy);
+        final RingBufferInvocationHandler invocationHandler =
+                createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
@@ -81,7 +92,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
             return createRingBufferProxy(proxyInterface, disruptor, overflowStrategy, implementations[0]);
         }
 
-        final RingBufferInvocationHandler invocationHandler = createInvocationHandler(proxyInterface, disruptor, overflowStrategy);
+        final RingBufferInvocationHandler invocationHandler =
+                createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
         final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
@@ -95,12 +107,14 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         return generateProxy(proxyInterface, invocationHandler);
     }
 
-    private static <T> RingBufferInvocationHandler createInvocationHandler(final Class<T> proxyInterface,
-                                                                           final Disruptor<ProxyMethodInvocation> disruptor,
-                                                                           final OverflowStrategy overflowStrategy)
+    private static <T> RingBufferInvocationHandler createInvocationHandler(
+            final Class<T> proxyInterface,
+            final Disruptor<ProxyMethodInvocation> disruptor,
+            final OverflowStrategy overflowStrategy,
+            final DropListener dropListener)
     {
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface);
-        return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy);
+        return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, dropListener);
     }
 
     @SuppressWarnings("unchecked")
@@ -129,5 +143,16 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         }
 
         return methodToInvokerMap;
+    }
+
+    private enum NoOpDropListener implements DropListener
+    {
+        INSTANCE;
+
+        @Override
+        public void onDrop()
+        {
+            // no-op
+        }
     }
 }

@@ -15,7 +15,7 @@
  */
 package com.lmax.tool.disruptor;
 
-public class ValidationConfigBuilder implements ValidationConfig
+public final class ValidationConfigBuilder implements ValidationConfig
 {
     private boolean validateExceptionHandler = true;
     private boolean validateProxyInterfaces = false;

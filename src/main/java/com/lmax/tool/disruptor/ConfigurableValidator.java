@@ -20,7 +20,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-public class ConfigurableValidator implements RingBufferProxyValidation, ValidationConfig
+public final class ConfigurableValidator implements RingBufferProxyValidation, ValidationConfig
 {
     private final boolean validateProxyInterfaces;
     private final boolean validateExceptionHandler;

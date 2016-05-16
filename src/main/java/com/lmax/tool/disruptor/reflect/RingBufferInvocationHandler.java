@@ -16,6 +16,7 @@
 
 package com.lmax.tool.disruptor.reflect;
 
+import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
@@ -30,14 +31,17 @@ final class RingBufferInvocationHandler implements InvocationHandler
     private final RingBuffer<ProxyMethodInvocation> ringBuffer;
     private final Map<Method, Invoker> methodToInvokerMap;
     private final OverflowStrategy overflowStrategy;
+    private final DropListener dropListener;
 
     RingBufferInvocationHandler(final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap,
-                                final OverflowStrategy overflowStrategy)
+                                final OverflowStrategy overflowStrategy,
+                                final DropListener dropListener)
     {
         this.ringBuffer = ringBuffer;
         this.methodToInvokerMap = methodToInvokerMap;
         this.overflowStrategy = overflowStrategy;
+        this.dropListener = dropListener;
     }
 
     @Override
@@ -45,6 +49,7 @@ final class RingBufferInvocationHandler implements InvocationHandler
     {
         if(overflowStrategy == OverflowStrategy.DROP && !ringBuffer.hasAvailableCapacity(1))
         {
+            dropListener.onDrop();
             return null;
         }
         final long sequence = ringBuffer.next();
