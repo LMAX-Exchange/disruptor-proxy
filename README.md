@@ -68,7 +68,9 @@ final T tImpl = new ConcreteT();
 final DropListener dropListener = new MyDropListener(); // handle drop events
 
 final RingBufferProxyGenerator generator =
-        generatorFactory.newProxy(GeneratorType.BYTECODE_GENERATION, new ConfigurableValidator(true, true), dropListener);
+        generatorFactory.newProxy(GeneratorType.BYTECODE_GENERATION,
+        new ConfigurableValidator(true, true),
+        dropListener);
 
 final T proxy = generator.createRingBufferProxy(T.class, disruptor, OverflowStrategy.DROP, tImpl);
 
