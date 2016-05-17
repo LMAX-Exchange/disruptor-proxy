@@ -13,13 +13,20 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.lmax.tool.disruptor;
 
-/**
- * Interface for a component that can invoke arguments on a target object
- */
-public interface Invoker
+public final class CountingDropListener implements DropListener
 {
-    void invokeWithArgumentHolder(final Object implementation, final Object argumentHolder);
+    private int dropCount = 0;
+
+    @Override
+    public void onDrop()
+    {
+        dropCount++;
+    }
+
+    public int getDropCount()
+    {
+        return dropCount;
+    }
 }
