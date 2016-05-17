@@ -13,7 +13,7 @@ for maximum straight-line performance.
 
 
 
-![implementation diagram](http://img.epickrram.com/projects/ringbuffer-proxy.png)
+![implementation diagram](https://raw.githubusercontent.com/LMAX-Exchange/disruptor-proxy/master/doc/DisruptorProxy.jpg)
 
 Maintainer
 ----------
