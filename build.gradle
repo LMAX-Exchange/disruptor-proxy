@@ -17,6 +17,9 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'checkstyle'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
 
 defaultTasks 'checkstyleTest', 'checkstyleMain', 'build'
 
@@ -25,13 +28,16 @@ version = new Version(major: 2, minor: 0, revision: 4)
 
 ext {
     fullName = 'Disruptor-Proxy'
-    fullDescription = ''
-    teamName = ''
+    fullDescription = 'A utility for generating Disruptor-backed proxies for easy execution serialisation'
+    teamName = 'LMAX Development Team'
     siteUrl = 'http://github.com/LMAX-Exchange/disruptor-proxy'
-    sourceUrl = ''
+    sourceUrl = 'git@github.com:LMAX-Exchange/disruptor-proxy.git'
 
     javaCompilerExecutable = System.env['JAVA_HOME'] ? System.env['JAVA_HOME'] + '/bin/javac' : 'javac'
 
+    if (!project.hasProperty('sonatypeUrl')) sonatypeUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+    if (!project.hasProperty('sonatypeUsername')) sonatypeUsername = ''
+    if (!project.hasProperty('sonatypePassword')) sonatypePassword = ''
 }
 
 repositories {
@@ -76,6 +82,55 @@ artifacts {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.2'
 }
+
+def projectPom = {
+    name = fullName
+    description = fullDescription
+    url = siteUrl
+
+    scm {
+        url = "scm:$sourceUrl"
+        connection = "scm:$sourceUrl"
+    }
+
+    licenses {
+        license {
+            name = 'The Apache Software License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution = 'repo'
+        }
+    }
+
+    developers {
+        developer {
+            id = 'team'
+            name = teamName
+            email = 'disruptor-proxy@googlegroups.com'
+        }
+    }
+}
+
+install {
+    repositories.mavenInstaller.pom.project(projectPom)
+}
+
+signing {
+    required { gradle.taskGraph.hasTask('uploadArchives') }
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        beforeDeployment { deployment -> signing.signPom(deployment) }
+
+        repository(url: sonatypeUrl) {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
+        }
+
+        pom.project(projectPom)
+    }
+}
+
 
 class Version {
     int major, minor = 0, revision = 0
