@@ -39,6 +39,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
 {
     private static final int ITERATIONS = 3;
     private final GeneratorType generatorType;
+    protected final CountingDropListener dropListener = new CountingDropListener();
 
     protected AbstractRingBufferProxyGeneratorTest(final GeneratorType generatorType)
     {
@@ -199,7 +200,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
         final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
-        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType);
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType, new ConfigurableValidator(false, true), dropListener);
 
         final CountDownLatch latch = new CountDownLatch(1);
         final BlockingOverflowTest implementation = new BlockingOverflowTest(latch);
@@ -219,6 +220,7 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         Executors.newSingleThreadExecutor().shutdown();
 
         assertThat(implementation.getInvocationCount(), is(4));
+        assertThat(dropListener.getDropCount(), is(4));
     }
 
     @Test

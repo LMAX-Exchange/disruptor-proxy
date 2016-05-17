@@ -159,14 +159,14 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy, argumentHolderGenerator);
         }
 
-        return instantiateProxy(ctClass, ringBuffer);
+        return instantiateProxy(ctClass, ringBuffer, dropListener);
     }
 
-    private <T> T instantiateProxy(final CtClass ctClass, final RingBuffer<ProxyMethodInvocation> ringBuffer)
+    private <T> T instantiateProxy(final CtClass ctClass, final RingBuffer<ProxyMethodInvocation> ringBuffer, final DropListener dropListener)
     {
         try
         {
-            return instantiate(ctClass.toClass(), new Class[]{RingBuffer.class}, ringBuffer);
+            return instantiate(ctClass.toClass(), new Class[]{RingBuffer.class, DropListener.class}, ringBuffer, dropListener);
         }
         catch (CannotCompileException e)
         {
@@ -206,8 +206,12 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         try
         {
-            final CtConstructor ctConstructor = new CtConstructor(new CtClass[]{classPool.getCtClass(RingBuffer.class.getName())}, ctClass);
-            ctConstructor.setBody("{ringBuffer = $1;}");
+            final CtConstructor ctConstructor = new CtConstructor(
+                    new CtClass[]{
+                            classPool.getCtClass(RingBuffer.class.getName()),
+                            classPool.getCtClass(DropListener.class.getName())
+                    }, ctClass);
+            ctConstructor.setBody("{ringBuffer = $1;dropListener = $2;}");
             ctClass.addConstructor(ctConstructor);
         }
         catch (NotFoundException e)
@@ -223,6 +227,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     private void createFields(final Map<Method, Invoker> methodToInvokerMap, final CtClass ctClass)
     {
         createField(ctClass, "private final " + RingBuffer.class.getName() + " ringBuffer;");
+        createField(ctClass, "private final " + DropListener.class.getName() + " dropListener;");
 
         for (final Method method : methodToInvokerMap.keySet())
         {
@@ -299,6 +304,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         {
             methodSrc.append("if(!ringBuffer.hasAvailableCapacity(1))\n");
             methodSrc.append("{");
+            methodSrc.append("dropListener.onDrop();");
             methodSrc.append("return;\n");
             methodSrc.append("}\n");
         }
