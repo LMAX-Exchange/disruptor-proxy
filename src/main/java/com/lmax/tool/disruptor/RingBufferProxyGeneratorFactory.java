@@ -72,6 +72,9 @@ public final class RingBufferProxyGeneratorFactory
      * @deprecated prefer newProxy().
      *
      * This method is left to preserve the existing behaviour now configurable in ValidationConfig.
+     *
+     * @param generatorType the type of generator
+     * @return the RingBufferProxyGenerator
      */
     @Deprecated
     public RingBufferProxyGenerator create(final GeneratorType generatorType)
