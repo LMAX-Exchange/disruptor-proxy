@@ -1,7 +1,15 @@
 disruptor-proxy       [![Build Status](https://travis-ci.org/LMAX-Exchange/disruptor-proxy.svg)](https://travis-ci.org/LMAX-Exchange/disruptor-proxy)
 ===============
 
-Byte-code generator to create Disruptor-backed proxies
+The disruptor-proxy is a tool for creating thread-safe proxies to your existing business code.
+
+Utilising the power of the [Disruptor](https://github.com/LMAX-Exchange/disruptor),
+disruptor-proxy will provide a high-performance, low-latency multi-threaded interface
+to your single-threaded components. This in turn allows users to exploit the
+[single-writer principle](http://mechanical-sympathy.blogspot.co.uk/2011/09/single-writer-principle.html)
+for maximum straight-line performance.
+
+
 
 ![implementation diagram](http://img.epickrram.com/projects/ringbuffer-proxy.png)
 
