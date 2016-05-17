@@ -42,12 +42,24 @@ public final class RingBufferProxyGeneratorFactory
      */
     public RingBufferProxyGenerator newProxy(final GeneratorType generatorType, final ValidationConfig config)
     {
+        return newProxy(generatorType, config, NoOpDropListener.INSTANCE);
+    }
+
+    /**
+     * Creates a RingBufferProxyGenerator
+     * @param generatorType the type of generator
+     * @param config configure how much validation the ringBufferProxyGenerator should have
+     * @param dropListener the supplied DropListener will be notified if the ring-buffer is full when OverflowStrategy is DROP
+     * @return the RingBufferProxyGenerator
+     */
+    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType, final ValidationConfig config, final DropListener dropListener)
+    {
         try
         {
             final Class<?> clazz = Class.forName(generatorType.getGeneratorClassName());
             ConfigurableValidator validator = new ConfigurableValidator(config.validateProxyInterfaces(), config.validateExceptionHandler());
-            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(RingBufferProxyValidation.class);
-            return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validator);
+            final Constructor<?> constructorForRingBufferProxyGenerator = clazz.getConstructor(RingBufferProxyValidation.class, DropListener.class);
+            return (RingBufferProxyGenerator) constructorForRingBufferProxyGenerator.newInstance(validator, dropListener);
         }
         catch (Exception e)
         {

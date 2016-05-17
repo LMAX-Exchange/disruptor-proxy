@@ -21,6 +21,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
+import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
@@ -145,14 +146,4 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         return methodToInvokerMap;
     }
 
-    private enum NoOpDropListener implements DropListener
-    {
-        INSTANCE;
-
-        @Override
-        public void onDrop()
-        {
-            // no-op
-        }
-    }
 }

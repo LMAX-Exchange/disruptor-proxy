@@ -18,8 +18,10 @@ package com.lmax.tool.disruptor.bytecode;
 
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
+import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
@@ -55,10 +57,19 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 {
     private final ClassPool classPool;
     private final RingBufferProxyValidation validator;
+    private final DropListener dropListener;
 
     public GeneratedRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
+        this(validator, NoOpDropListener.INSTANCE);
+
+    }
+
+    public GeneratedRingBufferProxyGenerator(final RingBufferProxyValidation validator,
+                                              final DropListener dropListener)
+    {
         this.validator = validator;
+        this.dropListener = dropListener;
         classPool = configureClassPool();
     }
 
