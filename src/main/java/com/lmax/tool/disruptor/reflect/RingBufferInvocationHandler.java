@@ -73,11 +73,11 @@ final class RingBufferInvocationHandler implements InvocationHandler
                 argumentHolder.set(null);
             }
             proxyMethodInvocation.setInvoker(methodToInvokerMap.get(method));
-            messagePublicationListener.onPostPublish();
         }
         finally
         {
             ringBuffer.publish(sequence);
+            messagePublicationListener.onPostPublish();
         }
         return null;
     }

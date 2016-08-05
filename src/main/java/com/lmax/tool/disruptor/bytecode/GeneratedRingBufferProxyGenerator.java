@@ -303,12 +303,12 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append("proxyMethodInvocation.setInvoker(_").append(invoker.getClass().getName()).
                 append(");\n").
-                append("messagePublicationListener.onPostPublish();\n").
                 append("}\n").
                 append("catch(Throwable t){t.printStackTrace();}\n").
                 append("finally\n").
                 append("{\n").
                 append("ringBuffer.publish(sequence);\n").
+                append("messagePublicationListener.onPostPublish();\n").
                 append("}\n");
         methodSrc.append("}\n");
 
