@@ -22,29 +22,6 @@ import java.lang.reflect.Field;
 
 public final class ConfigurableValidator implements RingBufferProxyValidation, ValidationConfig
 {
-    public enum ProxyInterface
-    {
-        REQUIRES_ANNOTATION(true), NO_ANNOTATION(false);
-
-        private final boolean validateProxyInterfaces;
-
-        ProxyInterface(final boolean validateProxyInterfaces)
-        {
-            this.validateProxyInterfaces = validateProxyInterfaces;
-        }
-    }
-
-    public enum ExceptionHandler
-    {
-        REQUIRED(true), NOT_REQUIRED(false);
-
-        private final boolean validateExceptionHandler;
-
-        ExceptionHandler(final boolean validateExceptionHandler)
-        {
-            this.validateExceptionHandler = validateExceptionHandler;
-        }
-    }
 
     private final boolean validateProxyInterfaces;
     private final boolean validateExceptionHandler;
@@ -52,8 +29,8 @@ public final class ConfigurableValidator implements RingBufferProxyValidation, V
     public ConfigurableValidator(final ProxyInterface proxyInterfaceConfiguration,
                                  final ExceptionHandler exceptionHandlerConfiguration)
     {
-        this(proxyInterfaceConfiguration.validateProxyInterfaces,
-                exceptionHandlerConfiguration.validateExceptionHandler);
+        this(proxyInterfaceConfiguration.shouldValidateProxyInterfaces(),
+                exceptionHandlerConfiguration.shouldValidateExceptionHandler());
     }
 
 

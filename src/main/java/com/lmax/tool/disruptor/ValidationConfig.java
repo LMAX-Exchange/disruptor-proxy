@@ -17,6 +17,40 @@ package com.lmax.tool.disruptor;
 
 public interface ValidationConfig
 {
+    enum ProxyInterface
+    {
+        REQUIRES_ANNOTATION(true), NO_ANNOTATION(false);
+
+        private final boolean validateProxyInterfaces;
+
+        ProxyInterface(final boolean validateProxyInterfaces)
+        {
+            this.validateProxyInterfaces = validateProxyInterfaces;
+        }
+
+        public boolean shouldValidateProxyInterfaces()
+        {
+            return validateProxyInterfaces;
+        }
+    }
+
+    enum ExceptionHandler
+    {
+        REQUIRED(true), NOT_REQUIRED(false);
+
+        private final boolean validateExceptionHandler;
+
+        ExceptionHandler(final boolean validateExceptionHandler)
+        {
+            this.validateExceptionHandler = validateExceptionHandler;
+        }
+
+        public boolean shouldValidateExceptionHandler()
+        {
+            return validateExceptionHandler;
+        }
+    }
+
     boolean validateProxyInterfaces();
 
     boolean validateExceptionHandler();
