@@ -22,6 +22,7 @@ import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.NoOpDropListener;
+import com.lmax.tool.disruptor.NoMessagePublicationListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
 import com.lmax.tool.disruptor.ResetHandler;
@@ -115,7 +116,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
             final DropListener dropListener)
     {
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface);
-        return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, dropListener);
+        return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, dropListener,
+                NoMessagePublicationListener.INSTANCE);
     }
 
     @SuppressWarnings("unchecked")

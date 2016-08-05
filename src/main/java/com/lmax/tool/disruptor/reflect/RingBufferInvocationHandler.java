@@ -16,11 +16,12 @@
 
 package com.lmax.tool.disruptor.reflect;
 
+import com.lmax.disruptor.RingBuffer;
 import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
+import com.lmax.tool.disruptor.MessagePublicationListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
-import com.lmax.disruptor.RingBuffer;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -32,21 +33,25 @@ final class RingBufferInvocationHandler implements InvocationHandler
     private final Map<Method, Invoker> methodToInvokerMap;
     private final OverflowStrategy overflowStrategy;
     private final DropListener dropListener;
+    private MessagePublicationListener messagePublicationListener;
 
     RingBufferInvocationHandler(final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap,
                                 final OverflowStrategy overflowStrategy,
-                                final DropListener dropListener)
+                                final DropListener dropListener,
+                                final MessagePublicationListener messagePublicationListener)
     {
         this.ringBuffer = ringBuffer;
         this.methodToInvokerMap = methodToInvokerMap;
         this.overflowStrategy = overflowStrategy;
         this.dropListener = dropListener;
+        this.messagePublicationListener = messagePublicationListener;
     }
 
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable
     {
+        messagePublicationListener.onPrePublish();
         if(overflowStrategy == OverflowStrategy.DROP && !ringBuffer.hasAvailableCapacity(1))
         {
             dropListener.onDrop();
@@ -68,6 +73,7 @@ final class RingBufferInvocationHandler implements InvocationHandler
                 argumentHolder.set(null);
             }
             proxyMethodInvocation.setInvoker(methodToInvokerMap.get(method));
+            messagePublicationListener.onPostPublish();
         }
         finally
         {
