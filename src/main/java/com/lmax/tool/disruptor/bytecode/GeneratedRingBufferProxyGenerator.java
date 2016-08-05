@@ -21,6 +21,8 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
+import com.lmax.tool.disruptor.MessagePublicationListener;
+import com.lmax.tool.disruptor.NoMessagePublicationListener;
 import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
@@ -58,6 +60,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     private final ClassPool classPool;
     private final RingBufferProxyValidation validator;
     private final DropListener dropListener;
+    private final MessagePublicationListener messagePublicationListener;
 
     public GeneratedRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
@@ -68,9 +71,17 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     public GeneratedRingBufferProxyGenerator(final RingBufferProxyValidation validator,
                                               final DropListener dropListener)
     {
+        this(validator, dropListener, NoMessagePublicationListener.INSTANCE);
+    }
+
+    public GeneratedRingBufferProxyGenerator(final RingBufferProxyValidation validator,
+                                             final DropListener dropListener,
+                                             final MessagePublicationListener messagePublicationListener)
+    {
         this.validator = validator;
         this.dropListener = dropListener;
-        classPool = configureClassPool();
+        this.messagePublicationListener = messagePublicationListener;
+        classPool = GeneratedRingBufferProxyGenerator.configureClassPool();
     }
 
     /**
@@ -407,7 +418,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
     }
 
-    private ClassPool configureClassPool()
+    private static ClassPool configureClassPool()
     {
         final ClassPool classPool = new ClassPool(ClassPool.getDefault());
         classPool.appendClassPath(new LoaderClassPath(Thread.currentThread().getContextClassLoader()));
