@@ -170,14 +170,15 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             createRingBufferPublisherMethod(ctClass, method, methodToInvokerMap.get(method), overflowStrategy, argumentHolderGenerator);
         }
 
-        return instantiateProxy(ctClass, ringBuffer, dropListener);
+        return instantiateProxy(ctClass, ringBuffer);
     }
 
-    private <T> T instantiateProxy(final CtClass ctClass, final RingBuffer<ProxyMethodInvocation> ringBuffer, final DropListener dropListener)
+    private <T> T instantiateProxy(final CtClass ctClass, final RingBuffer<ProxyMethodInvocation> ringBuffer)
     {
         try
         {
-            return instantiate(ctClass.toClass(), new Class[]{RingBuffer.class, DropListener.class}, ringBuffer, dropListener);
+            return instantiate(ctClass.toClass(), new Class[]{RingBuffer.class, DropListener.class,
+                    MessagePublicationListener.class}, ringBuffer, dropListener, messagePublicationListener);
         }
         catch (CannotCompileException e)
         {
@@ -220,9 +221,10 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             final CtConstructor ctConstructor = new CtConstructor(
                     new CtClass[]{
                             classPool.getCtClass(RingBuffer.class.getName()),
-                            classPool.getCtClass(DropListener.class.getName())
+                            classPool.getCtClass(DropListener.class.getName()),
+                            classPool.getCtClass(MessagePublicationListener.class.getName())
                     }, ctClass);
-            ctConstructor.setBody("{ringBuffer = $1;dropListener = $2;}");
+            ctConstructor.setBody("{ringBuffer = $1;dropListener = $2;messagePublicationListener = $3;}");
             ctClass.addConstructor(ctConstructor);
         }
         catch (NotFoundException e)
@@ -239,6 +241,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         createField(ctClass, "private final " + RingBuffer.class.getName() + " ringBuffer;");
         createField(ctClass, "private final " + DropListener.class.getName() + " dropListener;");
+        createField(ctClass, "private final " + MessagePublicationListener.class.getName() + " messagePublicationListener;");
 
         for (final Method method : methodToInvokerMap.keySet())
         {
