@@ -29,6 +29,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.lmax.tool.disruptor.ValidationConfig.ExceptionHandler.NOT_REQUIRED;
+import static com.lmax.tool.disruptor.ValidationConfig.ProxyInterface.NO_ANNOTATION;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -39,14 +41,15 @@ public abstract class AbstractRingBufferProxyGeneratorTest
 {
     private static final int ITERATIONS = 3;
     private final GeneratorType generatorType;
-    protected final CountingDropListener dropListener = new CountingDropListener();
+    private final CountingDropListener dropListener = new CountingDropListener();
+    private final CountingMessagePublicationListener messagePublicationListener = new CountingMessagePublicationListener();
 
     protected AbstractRingBufferProxyGeneratorTest(final GeneratorType generatorType)
     {
         this.generatorType = generatorType;
     }
 
-    public static final class ConcreteClass
+    private static final class ConcreteClass
     {
 
     }
@@ -196,6 +199,36 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     }
 
     @Test
+    public void shouldNotifyOnPreAndPostPublish() throws Exception
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 1024);
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType,
+                new ConfigurableValidator(NO_ANNOTATION, NOT_REQUIRED), dropListener, messagePublicationListener);
+
+        final ListenerImpl implementation = new ListenerImpl();
+        final Listener listener = ringBufferProxyGenerator.createRingBufferProxy(Listener.class, disruptor, OverflowStrategy.DROP, implementation);
+        disruptor.start();
+
+        for(int i = 0; i < 3; i++)
+        {
+            listener.onVoid();
+        }
+
+        RingBuffer<ProxyMethodInvocation> ringBuffer = disruptor.getRingBuffer();
+        while (ringBuffer.getMinimumGatingSequence() != ringBuffer.getCursor())
+        {
+            // Spin
+        }
+
+        disruptor.shutdown();
+        Executors.newSingleThreadExecutor().shutdown();
+
+        assertThat(messagePublicationListener.getPreCount(), is(3));
+        assertThat(messagePublicationListener.getPostCount(), is(3));
+    }
+
+    @Test
     public void shouldDropMessagesIfRingBufferIsFull() throws Exception
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
@@ -221,6 +254,36 @@ public abstract class AbstractRingBufferProxyGeneratorTest
 
         assertThat(implementation.getInvocationCount(), is(4));
         assertThat(dropListener.getDropCount(), is(4));
+    }
+
+    @Test
+    public void shouldNotNotifyOnPostPublishForDroppedMessages() throws Exception
+    {
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator = generatorFactory.newProxy(generatorType, new ConfigurableValidator(false, true), dropListener, messagePublicationListener);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final BlockingOverflowTest implementation = new BlockingOverflowTest(latch);
+        final OverflowTest listener = ringBufferProxyGenerator.createRingBufferProxy(OverflowTest.class, disruptor, OverflowStrategy.DROP, implementation);
+        disruptor.start();
+
+        for(int i = 0; i < 8; i++)
+        {
+            listener.invoke();
+        }
+
+        latch.countDown();
+
+        Thread.sleep(250L);
+
+        disruptor.shutdown();
+        Executors.newSingleThreadExecutor().shutdown();
+
+        assertThat(implementation.getInvocationCount(), is(4));
+        assertThat(dropListener.getDropCount(), is(4));
+        assertThat(messagePublicationListener.getPreCount(), is(8));
+        assertThat(messagePublicationListener.getPostCount(), is(4));
     }
 
     @Test

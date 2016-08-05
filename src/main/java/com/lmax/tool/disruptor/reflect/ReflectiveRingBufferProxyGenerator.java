@@ -21,6 +21,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
 import com.lmax.tool.disruptor.InvokerEventHandler;
+import com.lmax.tool.disruptor.MessagePublicationListener;
 import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.NoMessagePublicationListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
@@ -43,18 +44,26 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
 {
     private final RingBufferProxyValidation validator;
     private final DropListener dropListener;
+    private final MessagePublicationListener messagePublicationListener;
 
     public ReflectiveRingBufferProxyGenerator(final RingBufferProxyValidation validator)
     {
-        this(validator, NoOpDropListener.INSTANCE);
+        this(validator, NoOpDropListener.INSTANCE, NoMessagePublicationListener.INSTANCE);
     }
 
     public ReflectiveRingBufferProxyGenerator(final RingBufferProxyValidation validator,
                                               final DropListener dropListener)
     {
+        this(validator, dropListener, NoMessagePublicationListener.INSTANCE);
+    }
+
+    public ReflectiveRingBufferProxyGenerator(RingBufferProxyValidation validator, DropListener dropListener, MessagePublicationListener messagePublicationListener)
+    {
         this.validator = validator;
         this.dropListener = dropListener;
+        this.messagePublicationListener = messagePublicationListener;
     }
+
 
     /**
      * {@inheritDoc}
@@ -67,7 +76,8 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         validator.validateAll(disruptor, proxyInterface);
 
         final RingBufferInvocationHandler invocationHandler =
-                createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener);
+                createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener,
+                        messagePublicationListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
         disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
@@ -95,7 +105,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         }
 
         final RingBufferInvocationHandler invocationHandler =
-                createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener);
+                createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener, messagePublicationListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
         final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
@@ -113,11 +123,11 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
             final Class<T> proxyInterface,
             final Disruptor<ProxyMethodInvocation> disruptor,
             final OverflowStrategy overflowStrategy,
-            final DropListener dropListener)
+            final DropListener dropListener, MessagePublicationListener messagePublicationListener)
     {
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface);
         return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, dropListener,
-                NoMessagePublicationListener.INSTANCE);
+                messagePublicationListener);
     }
 
     @SuppressWarnings("unchecked")

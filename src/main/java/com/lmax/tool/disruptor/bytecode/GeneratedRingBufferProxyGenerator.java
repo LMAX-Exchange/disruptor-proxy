@@ -279,6 +279,8 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         }
         methodSrc.append(")\n{\n");
 
+        methodSrc.append("messagePublicationListener.onPrePublish();\n");
+
         handleOverflowStrategy(overflowStrategy, methodSrc);
 
         methodSrc.append("final long sequence = ringBuffer.next();\n").append("try\n").
@@ -301,6 +303,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
 
         methodSrc.append("proxyMethodInvocation.setInvoker(_").append(invoker.getClass().getName()).
                 append(");\n").
+                append("messagePublicationListener.onPostPublish();\n").
                 append("}\n").
                 append("catch(Throwable t){t.printStackTrace();}\n").
                 append("finally\n").

@@ -32,7 +32,7 @@ public enum GeneratorType
 
     private final String generatorClassname;
 
-    private GeneratorType(final String generatorClassName)
+    GeneratorType(final String generatorClassName)
     {
         this.generatorClassname = generatorClassName;
     }
