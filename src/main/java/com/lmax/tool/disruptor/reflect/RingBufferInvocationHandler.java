@@ -33,7 +33,7 @@ final class RingBufferInvocationHandler implements InvocationHandler
     private final Map<Method, Invoker> methodToInvokerMap;
     private final OverflowStrategy overflowStrategy;
     private final DropListener dropListener;
-    private MessagePublicationListener messagePublicationListener;
+    private final MessagePublicationListener messagePublicationListener;
 
     RingBufferInvocationHandler(final RingBuffer<ProxyMethodInvocation> ringBuffer,
                                 final Map<Method, Invoker> methodToInvokerMap,

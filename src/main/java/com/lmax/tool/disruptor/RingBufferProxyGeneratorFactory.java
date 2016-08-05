@@ -65,8 +65,8 @@ public final class RingBufferProxyGeneratorFactory
      * @param messagePublicationListener the supplied MessagePublicationListener will be notified before and after publishing
      * @return the RingBufferProxyGenerator
      */
-    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType, final ValidationConfig config, DropListener dropListener,
-                                             final MessagePublicationListener messagePublicationListener)
+    public RingBufferProxyGenerator newProxy(final GeneratorType generatorType, final ValidationConfig config,
+                                             final DropListener dropListener, final MessagePublicationListener messagePublicationListener)
     {
         try
         {
