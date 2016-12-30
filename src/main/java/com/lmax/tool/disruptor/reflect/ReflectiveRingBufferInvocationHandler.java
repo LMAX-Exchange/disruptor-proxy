@@ -27,7 +27,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-final class RingBufferInvocationHandler implements InvocationHandler
+final class ReflectiveRingBufferInvocationHandler implements InvocationHandler
 {
     private final RingBuffer<ProxyMethodInvocation> ringBuffer;
     private final Map<Method, Invoker> methodToInvokerMap;
@@ -35,11 +35,11 @@ final class RingBufferInvocationHandler implements InvocationHandler
     private final DropListener dropListener;
     private final MessagePublicationListener messagePublicationListener;
 
-    RingBufferInvocationHandler(final RingBuffer<ProxyMethodInvocation> ringBuffer,
-                                final Map<Method, Invoker> methodToInvokerMap,
-                                final OverflowStrategy overflowStrategy,
-                                final DropListener dropListener,
-                                final MessagePublicationListener messagePublicationListener)
+    ReflectiveRingBufferInvocationHandler(final RingBuffer<ProxyMethodInvocation> ringBuffer,
+                                          final Map<Method, Invoker> methodToInvokerMap,
+                                          final OverflowStrategy overflowStrategy,
+                                          final DropListener dropListener,
+                                          final MessagePublicationListener messagePublicationListener)
     {
         this.ringBuffer = ringBuffer;
         this.methodToInvokerMap = methodToInvokerMap;

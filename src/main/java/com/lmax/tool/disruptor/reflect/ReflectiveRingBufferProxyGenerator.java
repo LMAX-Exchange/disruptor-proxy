@@ -75,7 +75,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
     {
         validator.validateAll(disruptor, proxyInterface);
 
-        final RingBufferInvocationHandler invocationHandler =
+        final ReflectiveRingBufferInvocationHandler invocationHandler =
                 createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener,
                         messagePublicationListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
@@ -104,7 +104,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
             return createRingBufferProxy(proxyInterface, disruptor, overflowStrategy, implementations[0]);
         }
 
-        final RingBufferInvocationHandler invocationHandler =
+        final ReflectiveRingBufferInvocationHandler invocationHandler =
                 createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener, messagePublicationListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
@@ -119,19 +119,19 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
         return generateProxy(proxyInterface, invocationHandler);
     }
 
-    private static <T> RingBufferInvocationHandler createInvocationHandler(
+    private static <T> ReflectiveRingBufferInvocationHandler createInvocationHandler(
             final Class<T> proxyInterface,
             final Disruptor<ProxyMethodInvocation> disruptor,
             final OverflowStrategy overflowStrategy,
             final DropListener dropListener, MessagePublicationListener messagePublicationListener)
     {
         final Map<Method, Invoker> methodToInvokerMap = createMethodToInvokerMap(proxyInterface);
-        return new RingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, dropListener,
+        return new ReflectiveRingBufferInvocationHandler(disruptor.getRingBuffer(), methodToInvokerMap, overflowStrategy, dropListener,
                 messagePublicationListener);
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T generateProxy(final Class<T> proxyInterface, final RingBufferInvocationHandler invocationHandler)
+    private static <T> T generateProxy(final Class<T> proxyInterface, final ReflectiveRingBufferInvocationHandler invocationHandler)
     {
         return (T) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[]{proxyInterface}, invocationHandler);
     }
