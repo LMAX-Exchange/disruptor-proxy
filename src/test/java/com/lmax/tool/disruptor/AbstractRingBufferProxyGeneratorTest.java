@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.lmax.tool.disruptor.ValidationConfig.ExceptionHandler.NOT_REQUIRED;
 import static com.lmax.tool.disruptor.ValidationConfig.ProxyInterface.NO_ANNOTATION;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -257,6 +257,38 @@ public abstract class AbstractRingBufferProxyGeneratorTest
     }
 
     @Test
+    public void shouldReportBatchSize() throws Exception
+    {
+
+        final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 8);
+        final RingBufferProxyGeneratorFactory generatorFactory = new RingBufferProxyGeneratorFactory();
+        final RingBufferProxyGenerator ringBufferProxyGenerator =
+                generatorFactory.newProxy(generatorType, new ConfigurableValidator(false, true), dropListener);
+
+        final CountDownLatch latch1 = new CountDownLatch(1);
+        final CountDownLatch latch2 = new CountDownLatch(1);
+        final BatchSizeTrackingHandler batchSizeTracker = new BatchSizeTrackingHandler(latch1, latch2);
+        final OverflowTest listener = ringBufferProxyGenerator.createRingBufferProxy(OverflowTest.class, disruptor, OverflowStrategy.BLOCK, batchSizeTracker);
+        disruptor.start();
+
+        for(int i = 0; i < 8; i++)
+        {
+            listener.invoke();
+            latch1.await();
+        }
+
+        latch2.countDown();
+
+        Thread.sleep(250L);
+
+        disruptor.shutdown();
+        Executors.newSingleThreadExecutor().shutdown();
+
+        assertThat(batchSizeTracker.getInvocationCount(), is(8));
+        assertThat(batchSizeTracker.getMaxBatchSize(), is(7));
+    }
+
+    @Test
     public void shouldNotNotifyOnPostPublishForDroppedMessages() throws Exception
     {
         final Disruptor<ProxyMethodInvocation> disruptor = createDisruptor(Executors.newSingleThreadExecutor(), 4);
@@ -443,6 +475,53 @@ public abstract class AbstractRingBufferProxyGeneratorTest
         public void handleOnShutdownException(Throwable ex)
         {
             throw new RuntimeException("fail " + ex.getMessage());
+        }
+    }
+
+    private static class BatchSizeTrackingHandler implements OverflowTest, BatchSizeListener
+    {
+        private final CountDownLatch latch1;
+        private final CountDownLatch latch2;
+        private int invocationCount;
+        private int maxBatchSize;
+
+        public BatchSizeTrackingHandler(final CountDownLatch latch1, final CountDownLatch latch2)
+        {
+
+            this.latch1 = latch1;
+            this.latch2 = latch2;
+        }
+
+        @Override
+        public void invoke()
+        {
+            invocationCount++;
+
+            latch1.countDown();
+            try
+            {
+                latch2.await();
+            }
+            catch (final InterruptedException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void onEndOfBatch(final int batchSize)
+        {
+            maxBatchSize = Math.max(maxBatchSize, batchSize);
+        }
+
+        public int getMaxBatchSize()
+        {
+            return maxBatchSize;
+        }
+
+        public int getInvocationCount()
+        {
+            return invocationCount;
         }
     }
 }

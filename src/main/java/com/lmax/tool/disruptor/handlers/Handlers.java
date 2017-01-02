@@ -2,6 +2,7 @@ package com.lmax.tool.disruptor.handlers;
 
 import com.lmax.disruptor.EventHandler;
 import com.lmax.tool.disruptor.BatchListener;
+import com.lmax.tool.disruptor.BatchSizeListener;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
 
 public class Handlers
@@ -22,6 +23,10 @@ public class Handlers
         if (implementation instanceof BatchListener)
         {
             handler = new EndOfBatchEventHandler((BatchListener) implementation, handler);
+        }
+        if (implementation instanceof BatchSizeListener)
+        {
+            handler = new BatchSizeReportingEventHandler((BatchSizeListener) implementation, handler);
         }
         return handler;
     }
