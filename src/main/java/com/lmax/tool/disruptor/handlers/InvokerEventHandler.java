@@ -14,18 +14,38 @@
  *    limitations under the License.
  */
 
-package com.lmax.tool.disruptor;
+package com.lmax.tool.disruptor.handlers;
 
 import com.lmax.disruptor.EventHandler;
+import com.lmax.tool.disruptor.ProxyMethodInvocation;
 
 /**
- * A Disruptor EventHandler that will reset the ring-buffer entry
+ * A Disruptor event handler that will invoke an operation on the supplied implementation
+ * @param <T> the type of the implementation object to be invoked
  */
-public final class ResetHandler implements EventHandler<ProxyMethodInvocation>
+final class InvokerEventHandler<T> implements EventHandler<ProxyMethodInvocation>
 {
+    private final T implementation;
+    private final boolean reset;
+
+    public InvokerEventHandler(final T implementation, boolean reset)
+    {
+        this.implementation = implementation;
+        this.reset = reset;
+    }
+
+    public InvokerEventHandler(final T implementation)
+    {
+        this(implementation, true);
+    }
+
     @Override
     public void onEvent(final ProxyMethodInvocation event, final long sequence, final boolean endOfBatch) throws Exception
     {
-        event.reset();
+        event.getInvoker().invokeWithArgumentHolder(implementation, event.getArgumentHolder());
+        if (reset)
+        {
+            event.reset();
+        }
     }
 }

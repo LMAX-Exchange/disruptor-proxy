@@ -16,17 +16,17 @@
 
 package com.lmax.tool.disruptor.reflect;
 
+import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
-import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.MessagePublicationListener;
-import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.NoMessagePublicationListener;
+import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
-import com.lmax.tool.disruptor.ResetHandler;
+import com.lmax.tool.disruptor.handlers.ResetHandler;
 import com.lmax.tool.disruptor.RingBufferProxyGenerator;
 import com.lmax.tool.disruptor.RingBufferProxyValidation;
 
@@ -34,6 +34,8 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.lmax.tool.disruptor.handlers.Handlers.createMultipleImplementationHandlerChain;
+import static com.lmax.tool.disruptor.handlers.Handlers.createSingleImplementationHandlerChain;
 import static java.lang.Thread.currentThread;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
@@ -80,7 +82,7 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
                         messagePublicationListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
-        disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
+        disruptor.handleEventsWith(createSingleImplementationHandlerChain(implementation));
 
         return generateProxy(proxyInterface, invocationHandler);
     }
@@ -108,10 +110,10 @@ public final class ReflectiveRingBufferProxyGenerator implements RingBufferProxy
                 createInvocationHandler(proxyInterface, disruptor, overflowStrategy, dropListener, messagePublicationListener);
         preallocateArgumentHolders(disruptor.getRingBuffer());
 
-        final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
+        final EventHandler<ProxyMethodInvocation>[] handlers = new EventHandler[implementations.length];
         for (int i = 0; i < implementations.length; i++)
         {
-            handlers[i] = new InvokerEventHandler<T>(implementations[i], false);
+            handlers[i] = createMultipleImplementationHandlerChain(implementations[i]);
             disruptor.handleEventsWith(handlers[i]);
         }
         disruptor.after(handlers).then(new ResetHandler());

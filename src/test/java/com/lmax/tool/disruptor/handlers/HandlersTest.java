@@ -14,21 +14,28 @@
  *    limitations under the License.
  */
 
-package com.lmax.tool.disruptor;
+package com.lmax.tool.disruptor.handlers;
 
+import com.lmax.disruptor.EventHandler;
+import com.lmax.tool.disruptor.BatchAwareListenerImpl;
+import com.lmax.tool.disruptor.Invoker;
+import com.lmax.tool.disruptor.ListenerImpl;
+import com.lmax.tool.disruptor.ProxyMethodInvocation;
+import com.lmax.tool.disruptor.Resetable;
 import org.junit.Test;
 
+import static com.lmax.tool.disruptor.handlers.Handlers.createSingleImplementationHandlerChain;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 
-public final class InvokerEventHandlerTest
+public final class HandlersTest
 {
     @Test
     public void shouldNotifyBatchListenerOnEndOfBatch() throws Exception
     {
         final BatchAwareListenerImpl batchAwareListener = new BatchAwareListenerImpl();
-        final InvokerEventHandler<Listener> eventHandler = new InvokerEventHandler<Listener>(batchAwareListener);
+        final EventHandler<ProxyMethodInvocation> eventHandler = createSingleImplementationHandlerChain(batchAwareListener);
         final ProxyMethodInvocation proxyMethodInvocation = new ProxyMethodInvocation();
         proxyMethodInvocation.setArgumentHolder(new StubResetable());
         proxyMethodInvocation.setInvoker(new NoOpInvoker());
@@ -41,8 +48,8 @@ public final class InvokerEventHandlerTest
     @Test
     public void shouldNotNotifyNonBatchListenerOnEndOfBatch() throws Exception
     {
-        final ListenerImpl batchAwareListener = new ListenerImpl();
-        final InvokerEventHandler<Listener> eventHandler = new InvokerEventHandler<Listener>(batchAwareListener);
+        final ListenerImpl nonBatchAwareListener = new ListenerImpl();
+        final EventHandler<ProxyMethodInvocation> eventHandler = createSingleImplementationHandlerChain(nonBatchAwareListener);
         final ProxyMethodInvocation proxyMethodInvocation = new ProxyMethodInvocation();
         proxyMethodInvocation.setArgumentHolder(new StubResetable());
         proxyMethodInvocation.setInvoker(new NoOpInvoker());

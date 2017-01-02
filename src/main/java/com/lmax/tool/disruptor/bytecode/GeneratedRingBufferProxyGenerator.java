@@ -16,20 +16,20 @@
 
 package com.lmax.tool.disruptor.bytecode;
 
+import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.tool.disruptor.DropListener;
 import com.lmax.tool.disruptor.Invoker;
-import com.lmax.tool.disruptor.InvokerEventHandler;
 import com.lmax.tool.disruptor.MessagePublicationListener;
 import com.lmax.tool.disruptor.NoMessagePublicationListener;
 import com.lmax.tool.disruptor.NoOpDropListener;
 import com.lmax.tool.disruptor.OverflowStrategy;
 import com.lmax.tool.disruptor.ProxyMethodInvocation;
-import com.lmax.tool.disruptor.ResetHandler;
 import com.lmax.tool.disruptor.Resetable;
 import com.lmax.tool.disruptor.RingBufferProxyGenerator;
 import com.lmax.tool.disruptor.RingBufferProxyValidation;
+import com.lmax.tool.disruptor.handlers.ResetHandler;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -45,6 +45,8 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.lmax.tool.disruptor.handlers.Handlers.createMultipleImplementationHandlerChain;
+import static com.lmax.tool.disruptor.handlers.Handlers.createSingleImplementationHandlerChain;
 import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.addInterface;
 import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.createField;
 import static com.lmax.tool.disruptor.bytecode.ByteCodeHelper.createMethod;
@@ -93,7 +95,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         validator.validateAll(disruptor, proxyInterface);
 
-        disruptor.handleEventsWith(new InvokerEventHandler<T>(implementation));
+        disruptor.handleEventsWith(createSingleImplementationHandlerChain(implementation));
 
         final ArgumentHolderGenerator argumentHolderGenerator = new ArgumentHolderGenerator(classPool);
         argumentHolderGenerator.createArgumentHolderClass(proxyInterface);
@@ -124,10 +126,10 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             return createRingBufferProxy(proxyInterface, disruptor, overflowStrategy, implementations[0]);
         }
 
-        final InvokerEventHandler<T>[] handlers = new InvokerEventHandler[implementations.length];
+        final EventHandler<ProxyMethodInvocation>[] handlers = new EventHandler[implementations.length];
         for (int i = 0; i < implementations.length; i++)
         {
-            handlers[i] = new InvokerEventHandler<T>(implementations[i], false);
+            handlers[i] = createMultipleImplementationHandlerChain(implementations[i]);
             disruptor.handleEventsWith(handlers[i]);
         }
         disruptor.after(handlers).then(new ResetHandler());
