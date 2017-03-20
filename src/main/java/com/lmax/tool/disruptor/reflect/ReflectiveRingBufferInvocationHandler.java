@@ -29,6 +29,8 @@ import java.util.Map;
 
 final class ReflectiveRingBufferInvocationHandler implements InvocationHandler
 {
+    private static final String TO_STRING_METHOD_NAME = "toString";
+
     private final RingBuffer<ProxyMethodInvocation> ringBuffer;
     private final Map<Method, Invoker> methodToInvokerMap;
     private final OverflowStrategy overflowStrategy;
@@ -51,6 +53,11 @@ final class ReflectiveRingBufferInvocationHandler implements InvocationHandler
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable
     {
+        if (TO_STRING_METHOD_NAME.equals(method.getName()))
+        {
+            return this.toString();
+        }
+
         messagePublicationListener.onPrePublish();
         if(overflowStrategy == OverflowStrategy.DROP && !ringBuffer.hasAvailableCapacity(1))
         {
