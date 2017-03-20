@@ -53,7 +53,7 @@ final class ReflectiveRingBufferInvocationHandler implements InvocationHandler
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable
     {
-        if (TO_STRING_METHOD_NAME.equals(method.getName()))
+        if (TO_STRING_METHOD_NAME.equals(method.getName()) && args == null)
         {
             return this.toString();
         }
