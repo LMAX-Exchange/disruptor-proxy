@@ -1,5 +1,7 @@
-disruptor-proxy       [![Build Status](https://travis-ci.org/LMAX-Exchange/disruptor-proxy.svg)](https://travis-ci.org/LMAX-Exchange/disruptor-proxy)
-===============
+# disruptor-proxy
+
+![Java CI with Gradle](https://github.com/LMAX-Exchange/disruptor-proxy/workflows/Java%20CI%20with%20Gradle/badge.svg)
+[![License](https://img.shields.io/github/license/LMAX-Exchange/disruptor-proxy)](https://github.com/LMAX-Exchange/disruptor-proxy/blob/master/LICENCE.txt)
 
 The disruptor-proxy is a tool for creating thread-safe proxies to your existing business code.
 
@@ -11,17 +13,14 @@ This in turn allows users to exploit the
 [single-writer principle](http://mechanical-sympathy.blogspot.co.uk/2011/09/single-writer-principle.html)
 for maximum straight-line performance.
 
-
-
 ![implementation diagram](https://raw.githubusercontent.com/LMAX-Exchange/disruptor-proxy/master/doc/DisruptorProxy.jpg)
 
-Maintainer
-----------
+## Maintainer
 
-[Mark Price](https://github.com/epickrram)
 
-Examples
---------
+LMAX Development Team
+
+## Examples
 
 ```java
 
@@ -78,15 +77,13 @@ disruptor.start();
 ```
 
 
-GeneratorType
--------------
+## GeneratorType
 
 * `GeneratorType.JDK_REFLECTION` - uses `java.lang.reflect.Proxy` to generate a dynamic proxy that will add events to the RingBuffer. Use this for minimal dependencies.
 * `GeneratorType.BYTECODE_GENERATION` - uses Javassist to generate classes that will add events to the RingBuffer. Use this for maximum performance.
 
 
-Dependencies
-------------
+## Dependencies
 
 Minimal dependency is the Disruptor JAR. 
 
