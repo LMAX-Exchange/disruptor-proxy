@@ -16,7 +16,6 @@
 package com.lmax.tool.disruptor;
 
 import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ExceptionHandlerWrapper;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -72,17 +71,22 @@ public final class ConfigurableValidator implements RingBufferProxyValidation, V
         {
             final Field field = Disruptor.class.getDeclaredField("exceptionHandler");
             field.setAccessible(true);
-            Object exceptionHandler = field.get(disruptor);
-            if (exceptionHandler instanceof ExceptionHandlerWrapper)
-            {
-                final Field delegateField = ExceptionHandlerWrapper.class.getDeclaredField("delegate");
-                delegateField.setAccessible(true);
-                exceptionHandler = delegateField.get(exceptionHandler);
-            }
+            final Object exceptionHandler = field.get(disruptor);
             if (exceptionHandler == null)
             {
                 throw new IllegalStateException("Please supply an ExceptionHandler to the Disruptor instance. " +
                         "The default Disruptor behaviour is to stop processing when an exception occurs.");
+            }
+            if (exceptionHandler.getClass().getSimpleName().equals("com.lmax.disruptor.dsl.ExceptionHandlerWrapper"))
+            {
+                final Field delegateField = exceptionHandler.getClass().getDeclaredField("delegate");
+                delegateField.setAccessible(true);
+                final Object nestedExceptionHandler = delegateField.get(exceptionHandler);
+                if (nestedExceptionHandler == null)
+                {
+                    throw new IllegalStateException("Please supply an ExceptionHandler to the Disruptor instance. " +
+                            "The default Disruptor behaviour is to stop processing when an exception occurs.");
+                }
             }
         }
         catch (NoSuchFieldException | IllegalAccessException e)
