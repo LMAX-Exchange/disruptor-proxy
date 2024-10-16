@@ -29,7 +29,8 @@ plugins {
 defaultTasks 'checkstyleTest', 'checkstyleMain', 'build'
 
 group = 'com.lmax'
-version = new Version(major: 2, minor: 2, revision: 0)
+// The below is updated by CI during the release
+version = '1.0.0'
 
 ext {
     fullName = 'Disruptor-Proxy'
@@ -130,18 +131,10 @@ jreleaser {
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('build/staging-deploy')
                     applyMavenCentralRules = true
+                    closeRepository = true
+                    releaseRepository = true
                 }
             }
         }
-    }
-}
-
-class Version {
-    int major, minor = 0, revision = 0
-    boolean snapshot
-    String stage
-
-    String toString() {
-        "$major.$minor.$revision${stage ? '.' + stage : ''}${snapshot ? '-SNAPSHOT' : ''}"
     }
 }
