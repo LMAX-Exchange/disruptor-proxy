@@ -1,0 +1,49 @@
+name: Publish Release Artifacts
+on:
+  release:
+    types: [ created ]
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Set Gradle App Version to ${{ github.event.release.tag_name }}
+        run: sed -i "s/version = '.*'/version = '${{ github.event.release.tag_name }}'/g" build.gradle
+      - name: Publish package
+        uses: gradle/gradle-build-action@v2.11.1
+        with:
+          arguments: publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish package to Maven Central
+        uses: gradle/gradle-build-action@v2.11.1
+        with:
+          arguments: jreleaserFullRelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+          JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
+          JRELEASER_GPG_SECRET_KEY: "${{ secrets.JRELEASER_GPG_SECRET_KEY }}"
+          JRELEASER_GPG_PUBLIC_KEY: "${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}"
+          JRELEASER_GPG_PASSPHRASE: "${{ secrets.JRELEASER_GPG_PASSPHRASE }}"
+          JRELEASER_GITHUB_TOKEN: ${{ github.token }}
+          JRELEASER_MAVENCENTRAL_STAGE: "FULL"
+      - name: Add Artifact to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/libs/disruptor-proxy-*.jar

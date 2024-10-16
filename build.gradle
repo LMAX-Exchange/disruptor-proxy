@@ -15,32 +15,29 @@
  */
 
 plugins {
+    id 'java'
     id 'java-library'
     id 'maven-publish'
     id 'signing'
     id 'checkstyle'
     id 'idea'
     id "biz.aQute.bnd.builder" version "6.3.1"
+    id 'org.jreleaser' version '1.14.0'
 }
 
 
 defaultTasks 'checkstyleTest', 'checkstyleMain', 'build'
 
 group = 'com.lmax'
-version = new Version(major: 2, minor: 2, revision: 0)
+// The below is updated by CI during the release
+version = '1.0.0'
 
 ext {
     fullName = 'Disruptor-Proxy'
     fullDescription = 'A utility for generating Disruptor-backed proxies for easy execution serialisation'
     teamName = 'LMAX Development Team'
-    siteUrl = 'http://github.com/LMAX-Exchange/disruptor-proxy'
+    siteUrl = 'https://github.com/LMAX-Exchange/disruptor-proxy'
     sourceUrl = 'git@github.com:LMAX-Exchange/disruptor-proxy.git'
-
-    javaCompilerExecutable = System.env['JAVA_HOME'] ? System.env['JAVA_HOME'] + '/bin/javac' : 'javac'
-
-    if (!project.hasProperty('sonatypeUrl')) sonatypeUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-    if (!project.hasProperty('sonatypeUsername')) sonatypeUsername = ''
-    if (!project.hasProperty('sonatypePassword')) sonatypePassword = ''
 }
 
 repositories {
@@ -55,39 +52,25 @@ dependencies {
 }
 
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
-
-jar {
-    manifest.attributes('Built-By': System.properties['user.name'],
-                        'Bundle-Name': fullName,
-                        'Bundle-Vendor': teamName,
-                        'Bundle-Description': fullDescription,
-                        'Bundle-DocURL': siteUrl)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 checkstyle {
     toolVersion = 6.3
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar, javadocJar
-}
-
 publishing {
     publications {
         disruptor(MavenPublication) {
             from components.java
+
+            groupId = 'com.lmax'
+            artifactId = 'disruptor-proxy'
 
             pom {
                 name = project.ext.fullName
@@ -97,50 +80,59 @@ publishing {
                 scm {
                     url = "scm:${project.ext.sourceUrl}"
                     connection = "scm:${project.ext.sourceUrl}"
+                    developerConnection = "scm:${project.ext.sourceUrl}"
                 }
 
                 licenses {
                     license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = 'Apache-2.0'
+                        url = 'https://spdx.org/licenses/Apache-2.0.html'
                     }
                 }
 
                 developers {
                     developer {
-                        id = 'team'
+                        id = 'LMAX Group Open Source'
                         name = teamName
-                        email = 'disruptor-proxy@googlegroups.com'
+                        email = 'opensource@lmax.com'
                     }
                 }
             }
         }
     }
 
+
     repositories {
         maven {
-            url project.hasProperty('sonatypeUrl') ? project['sonatypeUrl'] : 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-
-            credentials {
-                username = project.hasProperty('sonatypeUsername') ? project['sonatypeUsername'] : 'fake-user'
-                password = project.hasProperty('sonatypePassword') ? project['sonatypePassword'] : 'fake-password'
-            }
+            url = layout.buildDirectory.dir('staging-deploy')
         }
     }
 }
 
-signing {
-    sign publishing.publications.disruptor
-}
-
-
-
-class Version {
-    int major, minor = 0, revision = 0
-    boolean snapshot
-    String stage
-
-    String toString() {
-        "$major.$minor.$revision${stage ? '.' + stage : ''}${snapshot ? '-SNAPSHOT' : ''}"
+jreleaser {
+    files {
+        active = 'ALWAYS'
+        glob {
+            pattern = 'build/staging-deploy/**/*.jar'
+            pattern = 'build/staging-deploy/**/*.pom'
+            pattern = 'build/staging-deploy/**/*.module'
+        }
+    }
+    signing {
+        active = 'ALWAYS'
+        armored = true
+        mode = 'MEMORY'
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                    applyMavenCentralRules = true
+                }
+            }
+        }
     }
 }
