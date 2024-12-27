@@ -50,7 +50,7 @@ final class ArgumentHolderGenerator
 
     public void createArgumentHolderClass(final Class<?> proxyInterface)
     {
-        final CtClass ctClass = makeClass(classPool, "_argumentHolder_" + proxyInterface.getSimpleName() + "_" + getUniqueIdentifier());
+        final CtClass ctClass = makeClass(classPool, "com.lmax.tool.disruptor.bytecode._argumentHolder_" + proxyInterface.getSimpleName() + "_" + getUniqueIdentifier());
 
         parameterTypeCounts = helper.getParameterTypeCounts(proxyInterface);
         createFields(ctClass);
@@ -61,7 +61,7 @@ final class ArgumentHolderGenerator
         {
             ctClass.addConstructor(CtNewConstructor.defaultConstructor(ctClass));
             makePublicFinal(ctClass);
-            generatedClass = ctClass.toClass();
+            generatedClass = ctClass.toClass(ArgumentHolderGenerator.class);
         }
         catch (CannotCompileException e)
         {

@@ -158,7 +158,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
                                 final Map<Method, Invoker> methodToInvokerMap, final OverflowStrategy overflowStrategy,
                                 final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        final CtClass ctClass = makeClass(classPool, "_proxy" + proxyInterface.getSimpleName() + '_' +
+        final CtClass ctClass = makeClass(classPool, "com.lmax.tool.disruptor.bytecode._proxy" + proxyInterface.getSimpleName() + '_' +
                 getUniqueIdentifier());
 
         addInterface(ctClass, proxyInterface, classPool);
@@ -179,7 +179,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     {
         try
         {
-            return instantiate(ctClass.toClass(), new Class[]{RingBuffer.class, DropListener.class,
+            return instantiate(ctClass.toClass(GeneratedRingBufferProxyGenerator.class), new Class[]{RingBuffer.class, DropListener.class,
                     MessagePublicationListener.class}, ringBuffer, dropListener, messagePublicationListener);
         }
         catch (CannotCompileException e)
@@ -250,7 +250,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             final Invoker invoker = methodToInvokerMap.get(method);
 
             createField(ctClass, "private final " + invoker.getClass().getName() + " _" +
-                    invoker.getClass().getName() + " = new " + invoker.getClass().getName() + "();");
+                    invoker.getClass().getName().replace(".", "_") + " = new " + invoker.getClass().getName() + "();");
         }
     }
 
@@ -303,7 +303,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
             methodSrc.append("holder.").append(holderField).append(" = ").append((char) ('a' + i)).append(";");
         }
 
-        methodSrc.append("proxyMethodInvocation.setInvoker(_").append(invoker.getClass().getName()).
+        methodSrc.append("proxyMethodInvocation.setInvoker(_").append(invoker.getClass().getName().replace(".", "_")).
                 append(");\n").
                 append("}\n").
                 append("catch(Throwable t){t.printStackTrace();}\n").
@@ -332,7 +332,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
     @SuppressWarnings("unchecked")
     private <T> Invoker generateInvoker(final Class<T> proxyInterface, final Method method, final ArgumentHolderGenerator argumentHolderGenerator)
     {
-        final StringBuilder invokerClassName = new StringBuilder("_invoker").append(proxyInterface.getSimpleName()).
+        final StringBuilder invokerClassName = new StringBuilder("com.lmax.tool.disruptor.bytecode._invoker").append(proxyInterface.getSimpleName()).
                 append(method.getName()).append('_').append(getUniqueIdentifier());
 
         final Class<?>[] parameterTypes = method.getParameterTypes();
@@ -378,7 +378,7 @@ public final class GeneratedRingBufferProxyGenerator implements RingBufferProxyG
         {
             ctClass.addMethod(CtMethod.make(methodSrc.toString(), ctClass));
             ctClass.addConstructor(CtNewConstructor.defaultConstructor(ctClass));
-            final Class generatedClass = ctClass.toClass();
+            final Class generatedClass = ctClass.toClass(GeneratedRingBufferProxyGenerator.class);
             return (Invoker) generatedClass.newInstance();
         }
         catch (CannotCompileException e)
